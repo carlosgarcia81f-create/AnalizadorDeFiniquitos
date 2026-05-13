@@ -16,7 +16,7 @@ if uploaded_file:
     # AQUÍ EMPIEZAS A PEGAR TU LÓGICA
     # Pero en lugar de la ruta del archivo, pasas 'uploaded_file'
     df = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=filas_a_saltar)
-
+    df_finiquito = df
 #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
 df_finiquito = df_finiquito.rename(columns={
     'Precio Unitario/Costo': 'PU',
