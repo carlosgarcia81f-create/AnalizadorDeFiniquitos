@@ -25,8 +25,8 @@ if uploaded_file is not None:
     st.write(f"Leyendo hoja: {nombre_hoja} saltando {filas_a_saltar} filas")
     st.write("Primeras 5 filas detectadas:")
     st.header("Vista previa de los datos leídos:")
-    st.dataframe(df_finiquito.head()) # Esto te mostrará si los títulos están en su lugar
-    st.write("Columnas detectadas:", df_finiquito.columns.tolist())
+    #st.dataframe(df_finiquito.head()) # Esto te mostrará si los títulos están en su lugar
+    #st.write("Columnas detectadas:", df_finiquito.columns.tolist())
 
     # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
     df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
