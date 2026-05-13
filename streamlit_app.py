@@ -20,11 +20,11 @@ display = st.write
 if uploaded_file is not None:
     df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=int(filas_a_saltar), engine='openpyxl')
        
-    ## Controles para ver que funcione bien ## 
+    ## Controles para ver que funcione una vez cargado el archivo bien ## 
     # DIAGNÓSTICO:
-    st.write(f"Leyendo hoja: {nombre_hoja} saltando {filas_a_saltar} filas")
-    st.write("Primeras 5 filas detectadas:")
-    st.header("Vista previa de los datos leídos:")
+    #st.write(f"Leyendo hoja: {nombre_hoja} saltando {filas_a_saltar} filas")
+    #st.write("Primeras 5 filas detectadas:")
+    #st.header("Vista previa de los datos leídos:")
     #st.dataframe(df_finiquito.head()) # Esto te mostrará si los títulos están en su lugar
     #st.write("Columnas detectadas:", df_finiquito.columns.tolist())
 
