@@ -13,7 +13,8 @@ nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
 umbral_exceso = st.sidebar.number_input("Umbral de exceso", value=0.3)
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
-
+# Definir display como un alias de st.write para que no marque error
+display = st.write
 
 if uploaded_file is not None:
     df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=int(filas_a_saltar), engine='openpyxl')
