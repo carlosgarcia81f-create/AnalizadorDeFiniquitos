@@ -20,8 +20,8 @@ if uploaded_file is not None:
     df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
        
     # Antes de la línea problemática, imprime las columnas y algunos datos
-        st.write("Columnas en df_finiquito:", df_finiquito.columns.tolist())
-        st.write("Primeras filas del DataFrame:", df_finiquito.head())
+    st.write("Columnas en df_finiquito:", df_finiquito.columns.tolist())
+    st.write("Primeras filas del DataFrame:", df_finiquito.head())
    
     #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
     df_finiquito = df_finiquito.rename(columns={
