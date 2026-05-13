@@ -89,7 +89,6 @@ if uploaded_file is not None:
     print(f"Se encontraron {len(excesos)} conceptos con un porcentaje de {porcentajeRespectoContrato*100}% superior respecto del porcentaje contratado")
     display(excesos[['Clave', 'Partida_Principal', 'Subpartida', 'Concepto', 'Monto_Contratado','Monto_Ejecutado','Variacion_Pct_%']])
     
-    #-----------------------------------------------------------------------------------------------------------------------------------------------------
     #---------------------- 8. RESUMEN EJECUTIVO (CORREGIDO) ---------------------------------------------------------------------------------------------
     resumen_ejecutivo = df_finiquito_auditoria.groupby(['Partida_Principal', 'Subpartida']).agg({
         'Monto_Contratado': 'sum',
@@ -130,7 +129,7 @@ if uploaded_file is not None:
         'Diferencia_Absoluta': '${:,.2f}',
         '%_Variacion_Global': '{:.2f}%'
     }).background_gradient(subset=['%_Variacion_Global'], cmap='YlOrRd'))
-    #-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    
     #---------------------- 9. PLANEACIÓN DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO CON CONFIGURACIÓN) ------------------------------------------
     
     # 1. Ordenamos de mayor a menor importancia económica
@@ -183,13 +182,7 @@ if uploaded_file is not None:
         '%_Acumulado': '{:.2f}%'
     }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
 
-
-
-
-
 #---------------------------------------------------------PARTE INTERACTIVA--------------------------------------#
-
-
 if uploaded_file:
     # 2. Mostrar propuesta de Pareto
     st.subheader("Propuesta de Inspección Física")
