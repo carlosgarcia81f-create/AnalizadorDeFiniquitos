@@ -13,15 +13,21 @@ nombre_hoja = st.sidebar.number_input("nombre_hoja", value=12)
 umbral_exceso = st.sidebar.number_input("Umbral de exceso", value=0.3)
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
+
+
 if uploaded_file is not None:
     df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=filas_a_saltar)
     
     # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
     df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
        
-    # Antes de la línea problemática, imprime las columnas y algunos datos
-    st.write("Columnas en df_finiquito:", df_finiquito.columns.tolist())
-    st.write("Primeras filas del DataFrame:", df_finiquito.head())
+    ## Controles para ver que funcione bien ## 
+    # DIAGNÓSTICO:
+    st.write(f"Leyendo hoja: {nombre_hoja} saltando {filas_a_saltar} filas")
+    st.write("Primeras 5 filas detectadas:")
+    st.header("Vista previa de los datos leídos:")
+    st.dataframe(df_finiquito.head()) # Esto te mostrará si los títulos están en su lugar
+    st.write("Columnas detectadas:", df_finiquito.columns.tolist())
    
     #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
     df_finiquito = df_finiquito.rename(columns={
