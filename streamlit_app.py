@@ -19,13 +19,7 @@ if uploaded_file is not None:
     # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
     df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
     
-    # Ahora el renombrado debería funcionar sin problemas
-    df_finiquito = df_finiquito.rename(columns={
-        'Precio Unitario/Costo': 'PU',
-        'Importe Contratado': 'Monto_Contratado',
-        'Importe total estimado': 'Monto_Ejecutado'
-    })
-    
+   
     #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
     df_finiquito = df_finiquito.rename(columns={
         'Precio Unitario/Costo': 'PU',
