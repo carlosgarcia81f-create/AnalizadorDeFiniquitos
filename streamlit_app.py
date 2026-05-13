@@ -16,8 +16,8 @@ uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
 
 if uploaded_file is not None:
-    df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=filas_a_saltar)
-         
+    df_finiquito = pd.read_excel(uploaded_file, sheet_name=str(nombre_hoja), skiprows=int(filas_a_saltar), engine='openpyxl')
+       
     ## Controles para ver que funcione bien ## 
     # DIAGNÓSTICO:
     st.write(f"Leyendo hoja: {nombre_hoja} saltando {filas_a_saltar} filas")
