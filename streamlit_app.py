@@ -187,7 +187,7 @@ if uploaded_file is not None:
 
 
 
-#################################################--------------------------------------------------
+#---------------------------------------------------------PARTE INTERACTIVA--------------------------------------#
 
 
 if uploaded_file:
@@ -196,14 +196,21 @@ if uploaded_file:
     
     # Configurar tabla interactiva para reordenar
     gb = GridOptionsBuilder.from_dataframe(df_plan_inspeccion)
-    gb.configure_row_drag(True) # Activa el arrastre de filas
+    gb.configure_column("Clave", rowDrag=True) # Activa el arrastre de filas
+    # También habilitamos que la tabla completa soporte el movimiento
     gridOptions = gb.build()
+    gridOptions['rowDragManaged'] = True
+    gridOptions['animateRows'] = True
     
-    response = AgGrid(df_plan_inspeccion, gridOptions=gridOptions)
-    
-    # 3. Recalcular según el nuevo orden
+    response = AgGrid(
+    df_plan_inspeccion, 
+    gridOptions=gridOptions,
+    update_mode='MODEL_CHANGED', # Esto hace que Streamlit detecte el cambio de orden
+    data_return_mode='FILTERED_AND_SORTED'
+    )
+
+    # El nuevo DataFrame con el orden que eligió el usuario
     df_usuario = pd.DataFrame(response['data'])
-    nuevo_acumulado = df_usuario['Monto_Ejecutado'].cumsum() / total_finiquito
     
     # 4. Botón de exportación
     st.download_button("Exportar Propuesta a Excel", data=buffer_excel, file_name="Propuesta_Auditoria.xlsx")
