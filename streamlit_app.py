@@ -17,10 +17,7 @@ uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
 if uploaded_file is not None:
     df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=filas_a_saltar)
-    
-    # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
-    df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
-       
+         
     ## Controles para ver que funcione bien ## 
     # DIAGNÓSTICO:
     st.write(f"Leyendo hoja: {nombre_hoja} saltando {filas_a_saltar} filas")
@@ -28,6 +25,9 @@ if uploaded_file is not None:
     st.header("Vista previa de los datos leídos:")
     st.dataframe(df_finiquito.head()) # Esto te mostrará si los títulos están en su lugar
     st.write("Columnas detectadas:", df_finiquito.columns.tolist())
+
+    # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
+    df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
    
     #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
     df_finiquito = df_finiquito.rename(columns={
