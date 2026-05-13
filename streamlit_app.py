@@ -13,10 +13,18 @@ nombre_hoja = st.sidebar.number_input("nombre_hoja", value=12)
 umbral_exceso = st.sidebar.number_input("Umbral de exceso", value=0.3)
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
-if uploaded_file:
-    # AQUÍ EMPIEZAS A PEGAR TU LÓGICA
-    # Pero en lugar de la ruta del archivo, pasas 'uploaded_file'
+if uploaded_file is not None:
     df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=filas_a_saltar)
+    
+    # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
+    df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
+    
+    # Ahora el renombrado debería funcionar sin problemas
+    df_finiquito = df_finiquito.rename(columns={
+        'Precio Unitario/Costo': 'PU',
+        'Importe Contratado': 'Monto_Contratado',
+        'Importe total estimado': 'Monto_Ejecutado'
+    })
     
     #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
     df_finiquito = df_finiquito.rename(columns={
