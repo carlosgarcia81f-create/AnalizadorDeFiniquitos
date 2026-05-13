@@ -9,14 +9,14 @@ st.title("Analizador de Finiquitos")
 
 # 2. Controles laterales (lo que eran tus variables de @param)
 filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
-nombre_hoja = st.sidebar.number_input("nombre_hoja", value=12)
+nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
 umbral_exceso = st.sidebar.number_input("Umbral de exceso", value=0.3)
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
 
 
 if uploaded_file is not None:
-    df_finiquito = pd.read_excel(uploaded_file, sheet_name=str(nombre_hoja), skiprows=int(filas_a_saltar), engine='openpyxl')
+    df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=int(filas_a_saltar), engine='openpyxl')
        
     ## Controles para ver que funcione bien ## 
     # DIAGNÓSTICO:
