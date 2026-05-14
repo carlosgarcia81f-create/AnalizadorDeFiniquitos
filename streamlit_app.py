@@ -174,7 +174,7 @@ if uploaded_file is not None:
     resumen_ejecutivo = resumen_ejecutivo.sort_values(by='Diferencia_Absoluta', ascending=False)
     
     # Visualización con formato
-    print("--- RESUMEN DE AUDITORÍA POR SUBPARTIDAS ---")
+    st.write("--- RESUMEN DE AUDITORÍA POR SUBPARTIDAS ---")
     display(resumen_ejecutivo.style.format({
         'Monto_Contratado': '${:,.2f}',
         'Monto_Ejecutado': '${:,.2f}',
@@ -208,13 +208,13 @@ if uploaded_file is not None:
         df_plan_inspeccion['Prioridad'] = df_plan_inspeccion['Prioridad'].astype(str)
         lista_campo = df_plan_inspeccion[df_plan_inspeccion['Prioridad'].str.startswith('ALTA')]
     else:
-        print("Advertencia: df_plan_inspeccion está vacío. No se pueden generar elementos para la lista de campo.")
+        st.write("Advertencia: df_plan_inspeccion está vacío. No se pueden generar elementos para la lista de campo.")
         lista_campo = pd.DataFrame(columns=['Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Monto_Ejecutado', '%_Peso', '%_Acumulado', 'Prioridad']) # Crear un DataFrame vacío con las columnas esperadas
     
-    print(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO {threshold_alta}/{100-threshold_alta}) ---")
-    print(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
-    print(f"Conceptos críticos a revisar para cubrir el {threshold_alta}% del monto: {len(lista_campo)}")
-    print("-" * 50)
+    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO {threshold_alta}/{100-threshold_alta}) ---")
+    st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
+    st.write(f"Conceptos críticos a revisar para cubrir el {threshold_alta}% del monto: {len(lista_campo)}")
+    st.write("-" * 50)
     
     # Visualización para llevar a campo
     display(lista_campo[['Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Cantidad total estimada','Monto_Ejecutado', '%_Peso','%_Acumulado']].style.format({
