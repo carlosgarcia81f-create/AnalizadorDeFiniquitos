@@ -12,8 +12,8 @@ st.title("Analizador de Finiquitos")
 # 2. Controles laterales (lo que eran tus variables de @param)
 filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
 nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
-umbral_exceso = st.sidebar.number_input("Umbral de exceso", value=0.3)
-porcentaje_pareto = st.sidebar.number_input("Umbral de exceso", value=0.8)
+umbral_exceso = st.sidebar.number_input("Umbral de exceso en %", value=0.3)
+porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
 # Definir display como un alias de st.write para que no marque error
@@ -92,7 +92,7 @@ if uploaded_file is not None:
     
     #----------------------7. Calculamos la variación porcentual de cada concepto respecto de lo contratado----------------------------------------------
     #Esto nos ayuda a ver cuales conceptos rebasaron más el importe contratado
-    porcentajeRespectoContrato = umbral_exceso # Usamos la variable de configuración
+    porcentajeRespectoContrato = umbral_exceso/100 # Usamos la variable de configuración
     df_finiquito_auditoria['Variacion_Pct'] = (df_finiquito_auditoria['Monto_Ejecutado'] - df_finiquito_auditoria['Monto_Contratado']) / df_finiquito_auditoria['Monto_Contratado']
     # Create a new column for the formatted percentage for display purposes
     df_finiquito_auditoria['Variacion_Pct_%'] = df_finiquito_auditoria['Variacion_Pct'].apply(lambda x: f'{x:.2%}')
