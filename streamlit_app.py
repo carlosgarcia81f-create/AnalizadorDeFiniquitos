@@ -17,6 +17,9 @@ uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 # Definir display como un alias de st.write para que no marque error
 display = st.write
 
+# 3. Configuración para anchos de columnas y tablas
+st.set_page_config(layout="wide")
+
 # M Ó D U L O 1
 #---------------- P R O C E S A M I E N T O,  L I M P I E Z A  Y  A N Á L I S I S --------------------------------------#
 # 1. Lectura de archivo
