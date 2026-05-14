@@ -39,8 +39,8 @@ if uploaded_file is not None:
     # Esto elimina espacios, saltos de línea y tabuladores en los títulos de las columnas
     df_finiquito.columns = [str(c).strip() for c in df_finiquito.columns]
     # Forzar la columna Clave a Texto
-if 'Clave' in df_finiquito.columns:
-    df_finiquito['Clave'] = df_finiquito['Clave'].astype(str).replace('nan', '')
+    if 'Clave' in df_finiquito.columns:
+        df_finiquito['Clave'] = df_finiquito['Clave'].astype(str).replace('nan', '')
     
     #---------------------- 2. Renombramos columnas----------------------------------------------------------------------------------------------------
     df_finiquito = df_finiquito.rename(columns={
