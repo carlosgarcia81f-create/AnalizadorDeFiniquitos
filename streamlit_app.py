@@ -196,96 +196,96 @@ if uploaded_file is not None:
     df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
 
 
-# 1. Crear el objeto en memoria
-buffer_excel = io.BytesIO()
-
-# 2. Iniciar el Writer
-with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
+    # 1. Crear el objeto en memoria
+    buffer_excel = io.BytesIO()
     
-    hojas = {
-        'Conceptos_sobre_Umbral': df_excesos,
-        'Var_Por_Partidas': resumen_ejecutivo,
-        'Resumen_Prioridades': df_resumen_final #Solo mostrará las columnas de interés
-    }
-
-    workbook = writer.book
+    # 2. Iniciar el Writer
+    with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
+        
+        hojas = {
+            'Conceptos_sobre_Umbral': df_excesos,
+            'Var_Por_Partidas': resumen_ejecutivo,
+            'Resumen_Prioridades': df_resumen_final #Solo mostrará las columnas de interés
+        }
     
-    # --- DEFINICIÓN DE FORMATOS ---
-    header_format = workbook.add_format({
-        'bold': True, 'text_wrap': True, 'font_color': 'white',
-        'valign': 'vcenter', 'align': 'center', 'bg_color': '#FF5E12', 'border': 1
-    })
-
-    # Formato para MONTO (Moneda: $ #,##0.00)
-    money_format = workbook.add_format({
-        'num_format': '"$"#,##0.00',
-        'text_wrap': True,
-        'valign': 'center'
-    })
-
-    # Formato para CANTIDADES (Miles con decimales: #,##0.00)
-    number_format = workbook.add_format({
-        'num_format': '#,##0.00',
-        'text_wrap': True,
-        'valign': 'center'
-    })
-
-    # Formato para Porcentajes (0.00%)
-    percent_format = workbook.add_format({
-        'num_format': '0.00%',
-        'text_wrap': True,
-        'valign': 'center'
-    })
+        workbook = writer.book
+        
+        # --- DEFINICIÓN DE FORMATOS ---
+        header_format = workbook.add_format({
+            'bold': True, 'text_wrap': True, 'font_color': 'white',
+            'valign': 'vcenter', 'align': 'center', 'bg_color': '#FF5E12', 'border': 1
+        })
     
-    # Formato base para TEXTO (Conceptos)
-    body_format = workbook.add_format({
-        'text_wrap': True,
-        'valign': 'top'
-    })
-
-    # --- PROCESO POR HOJA ---
-    for nombre_hoja, df in hojas.items():
-        if not df.empty:
-            df.to_excel(writer, sheet_name=nombre_hoja, index=False, startrow=1, header=False)
-            worksheet = writer.sheets[nombre_hoja]
-
-            # Aplicar encabezados
-            for col_num, value in enumerate(df.columns.values):
-                worksheet.write(0, col_num, value, header_format)
-
-            # --- APLICAR ANCHOS Y FORMATOS DE CELDA ---
-            for i, col in enumerate(df.columns):
-                # Determinar el ancho
-                if col in ['Concepto', 'Partida_Principal']:
-                    ancho = 45
-                    formato_celda = body_format
-                elif col == 'Clave':
-                    ancho = 12
-                    formato_celda = body_format
-                elif col == 'Variacion_Pct':
-                    ancho = 12
-                    formato_celda = percent_format    
-                # Si la columna es de DINERO (Monto, Importe, PU, Diferencia)
-                elif any(x in col for x in ['Monto', 'Importe', 'PU', 'Diferencia']):
-                    ancho = 14
-                    formato_celda = money_format
-                # Si la columna es de CANTIDAD (Cantidad, Volumen)
-                elif any(x in col for x in ['Cantidad', 'Volumen']):
-                    ancho = 9
-                    formato_celda = number_format
-                else:
-                    ancho = 14
-                    formato_celda = body_format
-                
-                # Aplicar a toda la columna (desde la fila 1 hasta la 1048576)
-                worksheet.set_column(i, i, ancho, formato_celda)
-        else:
-            pd.DataFrame(["No hay datos."]).to_excel(writer, sheet_name=nombre_hoja, index=False, header=False)
-
-# 3. Botón de descarga
-st.download_button(
-    label="📥 Descargar Reporte de Auditoría Final",
-    data=buffer_excel.getvalue(),
-    file_name="Reporte_Final_Auditoria.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+        # Formato para MONTO (Moneda: $ #,##0.00)
+        money_format = workbook.add_format({
+            'num_format': '"$"#,##0.00',
+            'text_wrap': True,
+            'valign': 'center'
+        })
+    
+        # Formato para CANTIDADES (Miles con decimales: #,##0.00)
+        number_format = workbook.add_format({
+            'num_format': '#,##0.00',
+            'text_wrap': True,
+            'valign': 'center'
+        })
+    
+        # Formato para Porcentajes (0.00%)
+        percent_format = workbook.add_format({
+            'num_format': '0.00%',
+            'text_wrap': True,
+            'valign': 'center'
+        })
+        
+        # Formato base para TEXTO (Conceptos)
+        body_format = workbook.add_format({
+            'text_wrap': True,
+            'valign': 'top'
+        })
+    
+        # --- PROCESO POR HOJA ---
+        for nombre_hoja, df in hojas.items():
+            if not df.empty:
+                df.to_excel(writer, sheet_name=nombre_hoja, index=False, startrow=1, header=False)
+                worksheet = writer.sheets[nombre_hoja]
+    
+                # Aplicar encabezados
+                for col_num, value in enumerate(df.columns.values):
+                    worksheet.write(0, col_num, value, header_format)
+    
+                # --- APLICAR ANCHOS Y FORMATOS DE CELDA ---
+                for i, col in enumerate(df.columns):
+                    # Determinar el ancho
+                    if col in ['Concepto', 'Partida_Principal']:
+                        ancho = 45
+                        formato_celda = body_format
+                    elif col == 'Clave':
+                        ancho = 12
+                        formato_celda = body_format
+                    elif col == 'Variacion_Pct':
+                        ancho = 12
+                        formato_celda = percent_format    
+                    # Si la columna es de DINERO (Monto, Importe, PU, Diferencia)
+                    elif any(x in col for x in ['Monto', 'Importe', 'PU', 'Diferencia']):
+                        ancho = 14
+                        formato_celda = money_format
+                    # Si la columna es de CANTIDAD (Cantidad, Volumen)
+                    elif any(x in col for x in ['Cantidad', 'Volumen']):
+                        ancho = 9
+                        formato_celda = number_format
+                    else:
+                        ancho = 14
+                        formato_celda = body_format
+                    
+                    # Aplicar a toda la columna (desde la fila 1 hasta la 1048576)
+                    worksheet.set_column(i, i, ancho, formato_celda)
+            else:
+                pd.DataFrame(["No hay datos."]).to_excel(writer, sheet_name=nombre_hoja, index=False, header=False)
+    
+    # 3. Botón de descarga
+    st.download_button(
+        label="📥 Descargar Reporte de Auditoría Final",
+        data=buffer_excel.getvalue(),
+        file_name="Reporte_Final_Auditoria.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
