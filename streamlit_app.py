@@ -219,74 +219,86 @@ st.download_button(
     file_name="Resultados_Auditoria.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )'''
-import io
-
 # 1. Crear el objeto en memoria
 buffer_excel = io.BytesIO()
 
 # 2. Iniciar el Writer
 with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
     
-    # --- Definición de Hojas ---
     hojas = {
         'Conceptos_sobre_Umbral': excesos,
         'Var_Por_Partidas': resumen_ejecutivo,
         'Resumen_Prioridades': df_plan_inspeccion_filtrado
     }
 
-    # --- Acceder al libro para definir formatos ---
     workbook = writer.book
     
-    # Formato para el encabezado: Negritas, fondo gris claro, centrado y borde
+    # --- DEFINICIÓN DE FORMATOS ---
     header_format = workbook.add_format({
-        'bold': True,
-        'text_wrap': True,
-        'valign': 'vcenter',
-        'align': 'center',
-        'bg_color': '#D7E4BC',
-        'border': 1
+        'bold': True, 'text_wrap': True, 'valign': 'vcenter',
+        'align': 'center', 'bg_color': '#D7E4BC', 'border': 1
     })
 
-    # Formato para el cuerpo: Ajuste de texto y alineación superior
+    # Formato para MONTO (Moneda: $ #,##0.00)
+    money_format = workbook.add_format({
+        'num_format': '"$"#,##0.00',
+        'text_wrap': True,
+        'valign': 'top'
+    })
+
+    # Formato para CANTIDADES (Miles con decimales: #,##0.00)
+    number_format = workbook.add_format({
+        'num_format': '#,##0.00',
+        'text_wrap': True,
+        'valign': 'top'
+    })
+
+    # Formato base para TEXTO (Conceptos)
     body_format = workbook.add_format({
         'text_wrap': True,
         'valign': 'top'
     })
 
-    # --- Proceso de Exportación por Hoja ---
+    # --- PROCESO POR HOJA ---
     for nombre_hoja, df in hojas.items():
         if not df.empty:
-            # Exportar datos (empezando en la fila 1 para poner nosotros el header manual)
             df.to_excel(writer, sheet_name=nombre_hoja, index=False, startrow=1, header=False)
-            
             worksheet = writer.sheets[nombre_hoja]
 
-            # Aplicar formato a los encabezados manualmente
+            # Aplicar encabezados
             for col_num, value in enumerate(df.columns.values):
                 worksheet.write(0, col_num, value, header_format)
 
-            # --- CONFIGURACIÓN DE ANCHOS Y AJUSTE DE TEXTO ---
-            # Ajustamos anchos según el nombre de la columna
+            # --- APLICAR ANCHOS Y FORMATOS DE CELDA ---
             for i, col in enumerate(df.columns):
-                ancho_col = 15 # Ancho por defecto
-                
-                if col == 'Concepto' or col == 'Partida_Principal':
-                    ancho_col = 50 # Ancho grande para descripciones
+                # Determinar el ancho
+                if col in ['Concepto', 'Partida_Principal']:
+                    ancho = 55
+                    formato_celda = body_format
                 elif col == 'Clave':
-                    ancho_col = 12
-                elif 'Monto' in col or 'Importe' in col:
-                    ancho_col = 18
+                    ancho = 12
+                    formato_celda = body_format
+                # Si la columna es de DINERO (Monto, Importe, PU, Diferencia)
+                elif any(x in col for x in ['Monto', 'Importe', 'PU', 'Diferencia']):
+                    ancho = 18
+                    formato_celda = money_format
+                # Si la columna es de CANTIDAD (Cantidad, Volumen)
+                elif any(x in col for x in ['Cantidad', 'Volumen']):
+                    ancho = 15
+                    formato_celda = number_format
+                else:
+                    ancho = 15
+                    formato_celda = body_format
                 
-                # Aplicar el ancho y el formato de ajuste de texto (body_format)
-                worksheet.set_column(i, i, ancho_col, body_format)
+                # Aplicar a toda la columna (desde la fila 1 hasta la 1048576)
+                worksheet.set_column(i, i, ancho, formato_celda)
         else:
-            # Si está vacío, poner mensaje simple
-            pd.DataFrame(["No hay datos disponibles."]).to_excel(writer, sheet_name=nombre_hoja, index=False, header=False)
+            pd.DataFrame(["No hay datos."]).to_excel(writer, sheet_name=nombre_hoja, index=False, header=False)
 
-# 3. Botón de descarga (se mantiene igual)
+# 3. Botón de descarga
 st.download_button(
-    label="📥 Descargar Reporte de Auditoría en Excel",
+    label="📥 Descargar Reporte de Auditoría Final",
     data=buffer_excel.getvalue(),
-    file_name="Resultados_Auditoria_Formateado.xlsx",
+    file_name="Reporte_Final_Auditoria.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
