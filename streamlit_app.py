@@ -187,6 +187,9 @@ if uploaded_file is not None:
 
 #--------------------------------------------- M O D U L O  2-----------------------------------------------------#
 #----------------E D I C I Ó N  I N T E R A C T I V A  P O R  U S U A R I O --------------------------------------#
+# 1. Crear un objeto en memoria para el archivo Excel
+buffer_excel = io.BytesIO()
+
 if uploaded_file:
     # 2. Mostrar propuesta de Pareto
     st.subheader("Propuesta de Inspección Física")
@@ -215,8 +218,7 @@ if uploaded_file:
 #---------------------------------- M O D U L O 3 ----------------------------------------------------------#
 #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
 
-# 1. Crear un objeto en memoria para el archivo Excel
-buffer_excel = io.BytesIO()
+
 
 # 2. Usar ExcelWriter con el buffer en lugar de un nombre de archivo
 with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
