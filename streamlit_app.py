@@ -220,9 +220,7 @@ buffer_excel = io.BytesIO()
 
 # 2. Usar ExcelWriter con el buffer en lugar de un nombre de archivo
 with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
-
-    with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
-    
+   
     # Exportar el análisis de excesos
     if not excesos.empty:
         excesos.to_excel(writer, sheet_name='Conceptos_con_Exceso', index=False)
