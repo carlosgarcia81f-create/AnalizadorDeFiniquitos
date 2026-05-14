@@ -12,7 +12,7 @@ st.title("Analizador de Finiquitos")
 # 2. Controles laterales (lo que eran tus variables de @param)
 filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
 nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
-umbral_exceso = st.sidebar.number_input("Umbral de exceso en %", value=0.3)
+umbral_exceso = st.sidebar.number_input("Umbral de exceso respecto a contrato en %", value=30)
 porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
