@@ -183,42 +183,7 @@ if uploaded_file is not None:
     }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
 
 #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
-'''FORMA 1
 #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
-
-# 1. Crear un objeto en memoria para el archivo Excel
-buffer_excel = io.BytesIO()
-
-
-# 2. Usar ExcelWriter con el buffer en lugar de un nombre de archivo
-with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
-   
-    # Exportar el análisis de excesos
-    if not excesos.empty:
-        excesos.to_excel(writer, sheet_name='Conceptos_sobre_Umbral', index=False)
-    else:
-        pd.DataFrame(["No se encontraron conceptos con exceso."]).to_excel(writer, sheet_name='Conceptos_sobre_Umbral', index=False, header=False)
-
-    # Exportar el resumen ejecutivo
-    if not resumen_ejecutivo.empty:
-        resumen_ejecutivo_export = resumen_ejecutivo.copy()
-        resumen_ejecutivo_export.to_excel(writer, sheet_name='Var_Por_Partidas', index=False)
-    else:
-        pd.DataFrame(["No hay resumen ejecutivo disponible."]).to_excel(writer, sheet_name='Var_Por_Partidas', index=False, header=False)
-
-    # Exportar el resumen completo de prioridades
-    if not df_plan_inspeccion_filtrado.empty:
-        df_plan_inspeccion_filtrado.to_excel(writer, sheet_name='Resumen_Prioridades', index=False)
-    else:
-        pd.DataFrame(["No hay resumen completo de prioridades disponible."]).to_excel(writer, sheet_name='Resumen_Prioridades', index=False, header=False)
-
-# 3. Creamos el botón para que el usuario realmente descargue el archivo
-st.download_button(
-    label="📥 Descargar Reporte de Auditoría en Excel",
-    data=buffer_excel.getvalue(),
-    file_name="Resultados_Auditoria.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)'''
 # 1. Crear el objeto en memoria
 buffer_excel = io.BytesIO()
 
@@ -235,22 +200,22 @@ with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
     
     # --- DEFINICIÓN DE FORMATOS ---
     header_format = workbook.add_format({
-        'bold': True, 'text_wrap': True, 'valign': 'vcenter',
-        'align': 'center', 'bg_color': '#D7E4BC', 'border': 1
+        'bold': True, 'text_wrap': True, 'font_color': 'white',
+        'valign': 'vcenter', 'align': 'center', 'bg_color': '#FF5E12', 'border': 1
     })
 
     # Formato para MONTO (Moneda: $ #,##0.00)
     money_format = workbook.add_format({
         'num_format': '"$"#,##0.00',
         'text_wrap': True,
-        'valign': 'top'
+        'valign': 'center'
     })
 
     # Formato para CANTIDADES (Miles con decimales: #,##0.00)
     number_format = workbook.add_format({
         'num_format': '#,##0.00',
         'text_wrap': True,
-        'valign': 'top'
+        'valign': 'center'
     })
 
     # Formato base para TEXTO (Conceptos)
@@ -273,21 +238,21 @@ with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
             for i, col in enumerate(df.columns):
                 # Determinar el ancho
                 if col in ['Concepto', 'Partida_Principal']:
-                    ancho = 55
+                    ancho = 45
                     formato_celda = body_format
                 elif col == 'Clave':
                     ancho = 12
                     formato_celda = body_format
                 # Si la columna es de DINERO (Monto, Importe, PU, Diferencia)
                 elif any(x in col for x in ['Monto', 'Importe', 'PU', 'Diferencia']):
-                    ancho = 18
+                    ancho = 14
                     formato_celda = money_format
                 # Si la columna es de CANTIDAD (Cantidad, Volumen)
                 elif any(x in col for x in ['Cantidad', 'Volumen']):
-                    ancho = 15
+                    ancho = 9
                     formato_celda = number_format
                 else:
-                    ancho = 15
+                    ancho = 14
                     formato_celda = body_format
                 
                 # Aplicar a toda la columna (desde la fila 1 hasta la 1048576)
