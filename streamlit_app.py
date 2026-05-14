@@ -4,49 +4,6 @@ import numpy as np
 import io  # Importante para manejar la exportación a Excel en memoria
 from st_aggrid import AgGrid, GridOptionsBuilder
 #-------------F U N C I O N E S  D E  A P O Y O ------------------------------------------------------------------------#
-##---Función para ajuste de anchos de tablas -------------------------------------
-def mostrar_tabla_interactiva(df, columna_drag=None, anchos_especificos=None):
-    """
-    df: El DataFrame a mostrar.
-    columna_drag: Nombre de la columna que tendrá el tirador para arrastrar.
-    anchos_especificos: Diccionario { "NombreCol": ancho_int }
-    """
-    gb = GridOptionsBuilder.from_dataframe(df)
-    
-    # Configuración base para TODAS las tablas
-    gb.configure_default_column(
-        resizable=True, 
-        wrapText=True, 
-        autoHeight=True,
-        filterable=True,
-        sortable=True
-    )
-
-    # Si queremos arrastrar filas, configuramos la columna elegida
-    if columna_drag:
-        gb.configure_column(columna_drag, rowDrag=True, width=120)
-
-    # Aplicamos anchos específicos si se pasaron como argumento
-    if anchos_especificos:
-        for col, ancho in anchos_especificos.items():
-            if col in df.columns:
-                gb.configure_column(col, width=ancho)
-
-    gridOptions = gb.build()
-    
-    # Configuraciones globales de comportamiento
-    gridOptions['rowDragManaged'] = True
-    gridOptions['animateRows'] = True
-
-    return AgGrid(
-        df,
-        gridOptions=gridOptions,
-        fit_columns_on_grid_load=True,
-        height=400,
-        width='100%',
-        theme='streamlit', # o 'alpine', 'balham'
-        update_mode='MODEL_CHANGED'
-    )
 
 # ------------ C O N F I G U R A C I Ó N  D E  P Á G I N A -------------------------------------------------------------#
 # 1. Título
@@ -182,7 +139,6 @@ if uploaded_file is not None:
         'Diferencia_Absoluta': '${:,.2f}',
         '%_Variacion_Global': '{:.2f}%'
     }).background_gradient(subset=['%_Variacion_Global'], cmap='YlOrRd'))
-    mostrar_tabla_interactiva(resumen_ejecutivo)
     #---------------------- 9. PLANEACIÓN DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO CON CONFIGURACIÓN) ------------------------------------------
     
     # 1. Ordenamos de mayor a menor importancia económica
