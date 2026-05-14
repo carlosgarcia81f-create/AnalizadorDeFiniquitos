@@ -182,7 +182,7 @@ if uploaded_file is not None:
         'Diferencia_Absoluta': '${:,.2f}',
         '%_Variacion_Global': '{:.2f}%'
     }).background_gradient(subset=['%_Variacion_Global'], cmap='YlOrRd'))
-    
+    mostrar_tabla_interactiva(resumen_ejecutivo)
     #---------------------- 9. PLANEACIÓN DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO CON CONFIGURACIÓN) ------------------------------------------
     
     # 1. Ordenamos de mayor a menor importancia económica
