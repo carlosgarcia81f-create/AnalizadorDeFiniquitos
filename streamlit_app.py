@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import io  # Importante para manejar la exportación a Excel en memoria
 from st_aggrid import AgGrid, GridOptionsBuilder
-###################################################---------------------
-# 1. Configuración de la página
+# ------------ C O N F I G U R A C I Ó N  D E  P Á G I N A -------------------------------------------------------------#
+# 1. Título
 st.title("Analizador de Finiquitos")
 
 # 2. Controles laterales (lo que eran tus variables de @param)
@@ -17,6 +17,9 @@ uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 # Definir display como un alias de st.write para que no marque error
 display = st.write
 
+# M Ó D U L O 1
+#---------------- P R O C E S A M I E N T O,  L I M P I E Z A  Y  A N Á L I S I S --------------------------------------#
+# 1. Lectura de archivo
 if uploaded_file is not None:
     df_finiquito = pd.read_excel(uploaded_file, sheet_name=nombre_hoja, skiprows=int(filas_a_saltar), engine='openpyxl')
        
@@ -182,7 +185,8 @@ if uploaded_file is not None:
         '%_Acumulado': '{:.2f}%'
     }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
 
-#---------------------------------------------------------PARTE INTERACTIVA--------------------------------------#
+#--------------------------------------------- M O D U L O  2-----------------------------------------------------#
+#----------------E D I C I Ó N  I N T E R A C T I V A  P O R  U S U A R I O --------------------------------------#
 if uploaded_file:
     # 2. Mostrar propuesta de Pareto
     st.subheader("Propuesta de Inspección Física")
@@ -208,4 +212,46 @@ if uploaded_file:
     # 4. Botón de exportación
     st.download_button("Exportar Propuesta a Excel", data=buffer_excel, file_name="Propuesta_Auditoria.xlsx")
 
+#---------------------------------- M O D U L O 3 ----------------------------------------------------------#
+#-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
 
+# 1. Crear un objeto en memoria para el archivo Excel
+buffer_excel = io.BytesIO()
+
+# 2. Usar ExcelWriter con el buffer en lugar de un nombre de archivo
+with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
+
+    with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
+    
+    # Exportar el análisis de excesos
+    if not excesos.empty:
+        excesos.to_excel(writer, sheet_name='Conceptos_con_Exceso', index=False)
+    else:
+        pd.DataFrame(["No se encontraron conceptos con exceso."]).to_excel(writer, sheet_name='Conceptos_con_Exceso', index=False, header=False)
+
+    # Exportar el resumen ejecutivo
+    if not resumen_ejecutivo.empty:
+        resumen_ejecutivo_export = resumen_ejecutivo.copy()
+        resumen_ejecutivo_export.to_excel(writer, sheet_name='Resumen_Ejecutivo', index=False)
+    else:
+        pd.DataFrame(["No hay resumen ejecutivo disponible."]).to_excel(writer, sheet_name='Resumen_Ejecutivo', index=False, header=False)
+
+    # Exportar la lista de campo (prioridad ALTA)
+    if not lista_campo.empty:
+        lista_campo.to_excel(writer, sheet_name='Inspeccion_Campo_ALTA', index=False)
+    else:
+        pd.DataFrame(["No se encontraron conceptos de alta prioridad para inspección."]).to_excel(writer, sheet_name='Inspeccion_Campo_ALTA', index=False, header=False)
+
+    # Exportar el resumen completo de prioridades
+    if not df_plan_inspeccion_filtrado.empty:
+        df_plan_inspeccion_filtrado.to_excel(writer, sheet_name='Resumen_Prioridades_Completo', index=False)
+    else:
+        pd.DataFrame(["No hay resumen completo de prioridades disponible."]).to_excel(writer, sheet_name='Resumen_Prioridades_Completo', index=False, header=False)
+
+# 3. Creamos el botón para que el usuario realmente descargue el archivo
+st.download_button(
+    label="📥 Descargar Reporte de Auditoría en Excel",
+    data=buffer_excel.getvalue(),
+    file_name="Resultados_Auditoria.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
