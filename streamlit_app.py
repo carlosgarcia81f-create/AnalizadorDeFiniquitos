@@ -216,15 +216,6 @@ if uploaded_file is not None:
     st.write(f"Conceptos críticos a revisar para cubrir el {threshold_alta}% del monto: {len(lista_campo)}")
     st.write("-" * 50)
     
-    # Visualización para llevar a campo
-    display(lista_campo[['Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Cantidad total estimada','Monto_Ejecutado', '%_Peso','%_Acumulado']].style.format({
-        '%_Peso': '{:.2f}%',
-        'Monto_Ejecutado': '${:,.2f}',
-        'Cantidad total estimada': '{:,.0f}',
-        '%_Acumulado': '{:.2f}%'
-    }).bar(subset=['%_Acumulado'], color='#5fba7d'))
-    
-    print("\n--- RESUMEN COMPLETO DE PRIORIDADES ---")
     # Filtramos los conceptos con Monto_Ejecutado > 0 (y por lo tanto %_Peso > 0)
     df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Monto_Ejecutado'] > 0].copy()
     display(df_plan_inspeccion_filtrado[['Prioridad','Partida_Principal', 'Subpartida', 'Clave', 'Concepto','Cantidad total estimada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
