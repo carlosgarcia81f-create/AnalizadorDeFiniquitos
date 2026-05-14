@@ -184,6 +184,15 @@ if uploaded_file is not None:
 
 #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
 #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
+# --- LIMPIEZA DE COLUMNAS PARA EL REPORTE ---
+# Selecciona solo lo que el auditor necesita ver en campo
+cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'Unidad', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
+df_resumen_final = df_plan_inspeccion_filtrado[cols_interes_resumen_prioridades].copy()
+
+cols_interes_excesos = ['Clave', 'Concepto', 'Unidad', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct',]
+df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
+
+
 # 1. Crear el objeto en memoria
 buffer_excel = io.BytesIO()
 
@@ -191,9 +200,9 @@ buffer_excel = io.BytesIO()
 with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
     
     hojas = {
-        'Conceptos_sobre_Umbral': excesos,
+        'Conceptos_sobre_Umbral': df_excesos,
         'Var_Por_Partidas': resumen_ejecutivo,
-        'Resumen_Prioridades': df_plan_inspeccion_filtrado
+        'Resumen_Prioridades': df_resumen_final #Solo mostrará las columnas de interés
     }
 
     workbook = writer.book
@@ -218,6 +227,13 @@ with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
         'valign': 'center'
     })
 
+    # Formato para Porcentajes (0.00%)
+    percent_format = workbook.add_format({
+        'num_format': '0.00%',
+        'text_wrap': True,
+        'valign': 'center'
+    })
+    
     # Formato base para TEXTO (Conceptos)
     body_format = workbook.add_format({
         'text_wrap': True,
@@ -243,6 +259,9 @@ with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
                 elif col == 'Clave':
                     ancho = 12
                     formato_celda = body_format
+                elif col == 'Variacion_Pct':
+                    ancho = 12
+                    formato_celda = percent_format    
                 # Si la columna es de DINERO (Monto, Importe, PU, Diferencia)
                 elif any(x in col for x in ['Monto', 'Importe', 'PU', 'Diferencia']):
                     ancho = 14
