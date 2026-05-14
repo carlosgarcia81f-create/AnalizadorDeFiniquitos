@@ -86,7 +86,8 @@ if uploaded_file is not None:
     df_finiquito = df_finiquito.rename(columns={
         'Precio Unitario/Costo': 'PU',
         'Importe Contratado': 'Monto_Contratado',
-        'Importe total estimado': 'Monto_Ejecutado'
+        'Importe total estimado': 'Monto_Ejecutado',
+        'Cantidad total estimada' : 'Cantidad_Ejecutada'
     })
     
     #---------------------- 3. Identificamos Nombres de Partidas y Subpartidas basado en la columna NIVEL-----------------------------------------------
@@ -218,10 +219,10 @@ if uploaded_file is not None:
     
     # Filtramos los conceptos con Monto_Ejecutado > 0 (y por lo tanto %_Peso > 0)
     df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Monto_Ejecutado'] > 0].copy()
-    display(df_plan_inspeccion_filtrado[['Prioridad','Partida_Principal', 'Subpartida', 'Clave', 'Concepto','Cantidad total estimada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
+    display(df_plan_inspeccion_filtrado[['Prioridad','Partida_Principal', 'Subpartida', 'Clave', 'Concepto','Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
         '%_Peso': '{:.2f}%',
         'Monto_Ejecutado': '${:,.2f}',
-        'Cantidad total estimada': '{:,.0f}',
+        'Cantidad_Ejecutada': '{:,.0f}',
         '%_Acumulado': '{:.2f}%'
     }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
 
