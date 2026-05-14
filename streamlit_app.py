@@ -188,12 +188,12 @@ if uploaded_file is not None:
 #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
 #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
 # --- LIMPIEZA DE COLUMNAS PARA EL REPORTE ---
-# Selecciona solo lo que el auditor necesita ver en campo
-cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'Unidad', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
-df_resumen_final = df_plan_inspeccion_filtrado[cols_interes_resumen_prioridades].copy()
-
-cols_interes_excesos = ['Clave', 'Concepto', 'Unidad', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct',]
-df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
+    # Selecciona solo lo que el auditor necesita ver en campo
+    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'Unidad', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
+    df_resumen_final = df_plan_inspeccion_filtrado[cols_interes_resumen_prioridades].copy()
+    
+    cols_interes_excesos = ['Clave', 'Concepto', 'Unidad', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct',]
+    df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
 
 
 # 1. Crear el objeto en memoria
