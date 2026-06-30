@@ -176,10 +176,15 @@ if uploaded_file is not None:
     st.write(f"Conceptos críticos a revisar para cubrir el {threshold_alta}% del monto: {len(lista_campo)}")
     st.write("-" * 50)
     # Asignación de prioridades iniciales por Pareto
+    # 1. Deja que el programa defina 'condiciones' y 'elecciones' por completo
+    condiciones = [ ... ] # Tus condiciones de Pareto
+    elecciones = [ ... ]  # Tus elecciones de Pareto
+    # 2. Deja la línea del np.select original tal y como estaba (Línea 179)
     df_plan_inspeccion['Prioridad'] = np.select(condiciones, elecciones, default='BAJA')
 
     # =========================================================================
     # FASE 1: PROMOVER CONCEPTOS VISIBLES O CRÍTICOS (Reglas de Negocio)
+    # COLOCO EL BLOQUE AQUÍ, JUSTO DEBAJO DEL NP.SELECT
     # =========================================================================
     conceptos_visibles_criticos = [
         'luminaria', 'lampara', 'toma domiciliaria', 'valvula', 
@@ -187,14 +192,10 @@ if uploaded_file is not None:
     ]
 
     for palabra in conceptos_visibles_criticos:
-        # Buscamos coincidencias en el texto (pasando todo a minúsculas)
         mascara_sensible = df_plan_inspeccion['Concepto'].str.lower().str.contains(palabra, na=False)
-        
-        # Forzamos a Prioridad 'ALTA' los que coincidan
         df_plan_inspeccion.loc[mascara_sensible, 'Prioridad'] = 'ALTA'
     # =========================================================================
-
-    # --- Siguiente línea (Tu línea 77 original) ---
+    
     df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Prioridad'] == 'ALTA']
 
     
