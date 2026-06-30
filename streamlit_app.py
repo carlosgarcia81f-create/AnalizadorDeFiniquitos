@@ -177,8 +177,11 @@ if uploaded_file is not None:
     st.write("-" * 50)
     # Asignación de prioridades iniciales por Pareto
     # 1. Deja que el programa defina 'condiciones' y 'elecciones' por completo
-    condiciones = [ ... ] # Tus condiciones de Pareto
-    elecciones = [ ... ]  # Tus elecciones de Pareto
+    condiciones = [
+    (df_plan_inspeccion['Monto_Ejecutado_Acumulado'] <= limite_alta),
+    (df_plan_inspeccion['Monto_Ejecutado_Acumulado'] <= limite_media)
+    ]
+    elecciones = ['ALTA', 'MEDIA']
     # 2. Deja la línea del np.select original tal y como estaba (Línea 179)
     df_plan_inspeccion['Prioridad'] = np.select(condiciones, elecciones, default='BAJA')
 
