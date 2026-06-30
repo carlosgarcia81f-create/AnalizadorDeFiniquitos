@@ -175,6 +175,28 @@ if uploaded_file is not None:
     st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
     st.write(f"Conceptos críticos a revisar para cubrir el {threshold_alta}% del monto: {len(lista_campo)}")
     st.write("-" * 50)
+    # Asignación de prioridades iniciales por Pareto
+    df_plan_inspeccion['Prioridad'] = np.select(condiciones, elecciones, default='BAJA')
+
+    # =========================================================================
+    # FASE 1: PROMOVER CONCEPTOS VISIBLES O CRÍTICOS (Reglas de Negocio)
+    # =========================================================================
+    conceptos_visibles_criticos = [
+        'luminaria', 'lampara', 'toma domiciliaria', 'valvula', 
+        'señalizacion', 'bomba', 'hidrante', 'arbol', 'banca', 'poste'
+    ]
+
+    for palabra in conceptos_visibles_criticos:
+        # Buscamos coincidencias en el texto (pasando todo a minúsculas)
+        mascara_sensible = df_plan_inspeccion['Concepto'].str.lower().str.contains(palabra, na=False)
+        
+        # Forzamos a Prioridad 'ALTA' los que coincidan
+        df_plan_inspeccion.loc[mascara_sensible, 'Prioridad'] = 'ALTA'
+    # =========================================================================
+
+    # --- Siguiente línea (Tu línea 77 original) ---
+    df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Prioridad'] == 'ALTA']
+
     
     # Filtramos los conceptos con Monto_Ejecutado > 0 (y por lo tanto %_Peso > 0)
     df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Monto_Ejecutado'] > 0].copy()
