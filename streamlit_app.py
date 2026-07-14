@@ -149,45 +149,27 @@ if uploaded_file is not None:
     
     # 2. Calculamos el peso de cada concepto y su acumulado
     total_finiquito = df_plan_inspeccion['Monto_Ejecutado'].sum()
-    df_plan_inspeccion['%_Peso'] = (df_plan_inspeccion['Monto_Ejecutado'] / total_finiquito) * 100
+    if total_finiquito > 0:
+        df_plan_inspeccion['%_Peso'] = (df_plan_inspeccion['Monto_Ejecutado'] / total_finiquito) * 100
+    else:
+        df_plan_inspeccion['%_Peso'] = 0.0
+        
     df_plan_inspeccion['%_Acumulado'] = df_plan_inspeccion['%_Peso'].cumsum()
     
     # 3. Definimos quiénes son del Grupo A (Prioridad Alta) usando el porcentaje configurable
-    #    El grupo B será un 5% adicional, y el resto el Grupo C.
-    threshold_alta = porcentaje_pareto # Usamos la variable de configuración (ej. 90%)
-    threshold_media = threshold_alta + 5 # Por ejemplo, 95%
+    threshold_alta = porcentaje_pareto 
+    threshold_media = threshold_alta + 5 
     
-    df_plan_inspeccion['Prioridad'] = df_plan_inspeccion['%_Acumulado'].apply(
-        lambda x: f'ALTA (Grupo A - cubre el {threshold_alta}%)' if x <= threshold_alta
-        else (f'MEDIA (Grupo B - cubre hasta el {threshold_media}%)' if x <= threshold_media else 'BAJA (Grupo C)')
-    )
-    
-    # 4. Filtramos la lista para tu bitácora de campo (solo los de alta prioridad)
-    # Se añade una comprobación para evitar el AttributeError si el DataFrame está vacío
-    if not df_plan_inspeccion.empty:
-        df_plan_inspeccion['Prioridad'] = df_plan_inspeccion['Prioridad'].astype(str)
-        lista_campo = df_plan_inspeccion[df_plan_inspeccion['Prioridad'].str.startswith('ALTA')]
-    else:
-        st.write("Advertencia: df_plan_inspeccion está vacío. No se pueden generar elementos para la lista de campo.")
-        lista_campo = pd.DataFrame(columns=['Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Monto_Ejecutado', '%_Peso', '%_Acumulado', 'Prioridad']) # Crear un DataFrame vacío con las columnas esperadas
-    
-    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO {threshold_alta}/{100-threshold_alta}) ---")
-    st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
-    st.write(f"Conceptos críticos a revisar para cubrir el {threshold_alta}% del monto: {len(lista_campo)}")
-    st.write("-" * 50)
-    # Asignación de prioridades iniciales por Pareto
-    # 1. Deja que el programa defina 'condiciones' y 'elecciones' por completo
+    # Asignación de prioridades iniciales por Pareto (CORREGIDO UTILIZANDO %_Acumulado)
     condiciones = [
-    (df_plan_inspeccion['Monto_Ejecutado_Acumulado'] <= limite_alta),
-    (df_plan_inspeccion['Monto_Ejecutado_Acumulado'] <= limite_media)
+        (df_plan_inspeccion['%_Acumulado'] <= threshold_alta),
+        (df_plan_inspeccion['%_Acumulado'] <= threshold_media)
     ]
     elecciones = ['ALTA', 'MEDIA']
-    # 2. Deja la línea del np.select original tal y como estaba (Línea 179)
     df_plan_inspeccion['Prioridad'] = np.select(condiciones, elecciones, default='BAJA')
 
     # =========================================================================
     # FASE 1: PROMOVER CONCEPTOS VISIBLES O CRÍTICOS (Reglas de Negocio)
-    # COLOCO EL BLOQUE AQUÍ, JUSTO DEBAJO DEL NP.SELECT
     # =========================================================================
     conceptos_visibles_criticos = [
         'luminaria', 'lampara', 'toma domiciliaria', 'valvula', 
@@ -199,26 +181,42 @@ if uploaded_file is not None:
         df_plan_inspeccion.loc[mascara_sensible, 'Prioridad'] = 'ALTA'
     # =========================================================================
     
-    df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Prioridad'] == 'ALTA']
+    # Filtrar: Que tengan prioridad ALTA y que además el monto ejecutado sea mayor a cero
+    df_plan_inspeccion_filtrado = df_plan_inspeccion[
+        (df_plan_inspeccion['Prioridad'] == 'ALTA') & 
+        (df_plan_inspeccion['Monto_Ejecutado'] > 0)
+    ].copy()
 
+    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO {threshold_alta}/{100-threshold_alta} + REGLAS DE NEGOCIO) ---")
+    st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
+    st.write(f"Conceptos críticos de alta prioridad seleccionados (incluye reglas de negocio): {len(df_plan_inspeccion_filtrado)}")
+    st.write("-" * 50)
     
-    # Filtramos los conceptos con Monto_Ejecutado > 0 (y por lo tanto %_Peso > 0)
-    df_plan_inspeccion_filtrado = df_plan_inspeccion[df_plan_inspeccion['Monto_Ejecutado'] > 0].copy()
+    # Mostrar tabla en Streamlit
     display(df_plan_inspeccion_filtrado[['Prioridad','Partida_Principal', 'Subpartida', 'Clave', 'Concepto','Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
         '%_Peso': '{:.2f}%',
         'Monto_Ejecutado': '${:,.2f}',
-        'Cantidad_Ejecutada': '{:,.0f}',
+        'Cantidad_Ejecutada': '{:,.2f}',
         '%_Acumulado': '{:.2f}%'
     }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
 
 #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
 #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
 # --- LIMPIEZA DE COLUMNAS PARA EL REPORTE ---
-    # Selecciona solo lo que el auditor necesita ver en campo
-    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'Unidad', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
+    
+    # NOTA: Verificamos si 'Unidad' existe en tus columnas originales. Si no existe, la omitimos para evitar KeyError.
+    columnas_disponibles = df_plan_inspeccion_filtrado.columns.tolist()
+    
+    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
+    if 'Unidad' in columnas_disponibles:
+        cols_interes_resumen_prioridades.insert(2, 'Unidad')
+        
     df_resumen_final = df_plan_inspeccion_filtrado[cols_interes_resumen_prioridades].copy()
     
-    cols_interes_excesos = ['Clave', 'Concepto', 'Unidad', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct',]
+    cols_interes_excesos = ['Clave', 'Concepto', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct']
+    if 'Unidad' in columnas_disponibles:
+        cols_interes_excesos.insert(2, 'Unidad')
+        
     df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
 
 
