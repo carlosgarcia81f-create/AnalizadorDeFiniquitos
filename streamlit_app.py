@@ -18,13 +18,13 @@ porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
 # REGLAS DE NEGOCIO: PALABRAS CLAVE POR DEFECTO PARA URBANIZACIÓN / CALLES
 # =========================================================================
 opciones_predeterminadas = [
-    'luminaria', 'lámpara', 'toma', 'válvula', 'señal', 
-    'bomba', 'poste', 'descarga', 'pozo', 'registro', 'boca'
+    'luminaria', 'lámpara', 'toma', 'válvula', 
+    'bomba', 'poste', 'descarga domicilaria', 'pozo', 'registro', 'boca'
 ]
 
 conceptos_visibles_criticos = st.sidebar.multiselect(
     "Conceptos críticos a promover (Reglas de Negocio):",
-    options=opciones_predeterminadas + ['mampostería', 'muro', 'tubería'], # Opciones sugeridas extra
+    options=opciones_predeterminadas + ['mampostería', 'muro'], # Opciones sugeridas extra
     default=opciones_predeterminadas # Lo que aparece seleccionado por defecto
 )
 
