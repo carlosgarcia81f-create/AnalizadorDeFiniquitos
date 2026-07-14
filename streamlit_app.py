@@ -14,6 +14,21 @@ filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
 nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
 umbral_exceso = st.sidebar.number_input("Umbral de exceso respecto a contrato en %", value=30)
 porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
+
+# =========================================================================
+# REGLAS DE NEGOCIO: PALABRAS CLAVE POR DEFECTO PARA URBANIZACIÓN / CALLES
+# =========================================================================
+opciones_predeterminadas = [
+    'luminaria', 'lampara', 'toma domiciliaria', 'valvula', 'señalizacion', 
+    'bomba', 'hidrante', 'arbol', 'banca', 'poste', 'descarga', 'pozo de visita', 'registro'
+]
+
+conceptos_visibles_criticos = st.sidebar.multiselect(
+    "Conceptos críticos a promover (Reglas de Negocio):",
+    options=opciones_predeterminadas + ['concreto', 'acero', 'tubería', 'excavación'], # Opciones sugeridas extra
+    default=opciones_predeterminadas # Lo que aparece seleccionado por defecto
+)
+
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
 # Definir display como un alias de st.write para que no marque error
@@ -169,15 +184,12 @@ if uploaded_file is not None:
     df_plan_inspeccion['Prioridad'] = np.select(condiciones, elecciones, default='BAJA')
 
     # =========================================================================
-    # FASE 1: PROMOVER CONCEPTOS VISIBLES O CRÍTICOS (Reglas de Negocio)
+    # FASE 1: PROMOVER CONCEPTOS VISIBLES O CRÍTICOS (Reglas de Negocio desde Interfaz)
     # =========================================================================
-    conceptos_visibles_criticos = [
-        'luminaria', 'lampara', 'toma domiciliaria', 'valvula', 
-        'señalizacion', 'bomba', 'hidrante', 'arbol', 'banca', 'poste'
-    ]
-
+    # Recorremos la lista dinámica que viene del multiselect de la barra lateral
     for palabra in conceptos_visibles_criticos:
-        mascara_sensible = df_plan_inspeccion['Concepto'].str.lower().str.contains(palabra, na=False)
+        # Usamos .str.contains con minúsculas para asegurar coincidencias parciales
+        mascara_sensible = df_plan_inspeccion['Concepto'].str.lower().str.contains(palabra.lower(), na=False)
         df_plan_inspeccion.loc[mascara_sensible, 'Prioridad'] = 'ALTA'
     # =========================================================================
     
