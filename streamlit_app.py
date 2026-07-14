@@ -8,7 +8,6 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 # ------------ C O N F I G U R A C I Ó N  D E  P Á G I N A -------------------------------------------------------------#
 # 1. Título
 st.title("Analizador de Finiquitos")
-st.write("CÓDIGO EN REPARACIÓN")
 # 2. Controles laterales (lo que eran tus variables de @param)
 filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
 nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
@@ -25,7 +24,7 @@ opciones_predeterminadas = [
 
 conceptos_visibles_criticos = st.sidebar.multiselect(
     "Conceptos críticos a promover (Reglas de Negocio):",
-    options=opciones_predeterminadas + ['concreto', 'acero', 'tubería', 'excavación'], # Opciones sugeridas extra
+    options=opciones_predeterminadas + ['mampostería', 'muro', 'tubería'], # Opciones sugeridas extra
     default=opciones_predeterminadas # Lo que aparece seleccionado por defecto
 )
 
