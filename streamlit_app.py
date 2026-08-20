@@ -217,20 +217,22 @@ if uploaded_file is not None:
     #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
     #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
     
-        # --- 1. LISTADO ORIGINAL COMPLETO (Con Prioridad, Peso y Acumulado) ---
-    df_original_marcado = df_finiquito_auditoria.copy()
+    # --- 1. LISTADO ORIGINAL COMPLETO (Formato intacto con títulos) ---
+    # Usamos df_finiquito, que contiene TODAS las filas originales (incluyendo títulos de partidas sin PU)
+    df_original_marcado = df_finiquito.copy()
     
-    # Mapeamos las variables calculadas al orden original
-    df_original_marcado['%_Peso'] = df_plan_inspeccion['%_Peso']
-    df_original_marcado['%_Acumulado'] = df_plan_inspeccion['%_Acumulado']
+    # Mapeamos la Prioridad de todos los conceptos analizados
     df_original_marcado['Prioridad'] = df_plan_inspeccion['Prioridad']
     
-    columnas_disponibles_orig = df_original_marcado.columns.tolist()
+    # Mapeamos el Peso y Acumulado ÚNICAMENTE de la tabla filtrada final (para que coincidan exacto con la app)
+    df_original_marcado['%_Peso'] = df_plan_inspeccion_filtrado['%_Peso']
+    df_original_marcado['%_Acumulado'] = df_plan_inspeccion_filtrado['%_Acumulado']
     
-    # Agregamos las columnas a la lista de interés para exportación
+    # Definimos las columnas a exportar
+    columnas_disponibles_raw = df_original_marcado.columns.tolist()
     cols_interes_original = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad']
     
-    if 'Unidad' in columnas_disponibles_orig:
+    if 'Unidad' in columnas_disponibles_raw:
         cols_interes_original.insert(2, 'Unidad')
     
     df_listado_completo = df_original_marcado[cols_interes_original].copy()
