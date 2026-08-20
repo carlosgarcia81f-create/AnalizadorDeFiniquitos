@@ -214,36 +214,50 @@ if uploaded_file is not None:
         '%_Acumulado': '{:.2f}%'
     }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
 
-#---------------------------------- M O D U L O 2 ----------------------------------------------------------#
-#-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
-# --- LIMPIEZA DE COLUMNAS PARA EL REPORTE ---
+    #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
+    #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
     
-    # NOTA: Verificamos si 'Unidad' existe en tus columnas originales. Si no existe, la omitimos para evitar KeyError.
-    columnas_disponibles = df_plan_inspeccion_filtrado.columns.tolist()
+        # --- 1. LISTADO ORIGINAL COMPLETO (Con Prioridad, Peso y Acumulado) ---
+    df_original_marcado = df_finiquito_auditoria.copy()
     
-    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
-    if 'Unidad' in columnas_disponibles:
-        cols_interes_resumen_prioridades.insert(2, 'Unidad')
-        
-    df_resumen_final = df_plan_inspeccion_filtrado[cols_interes_resumen_prioridades].copy()
+    # Mapeamos las variables calculadas al orden original
+    df_original_marcado['%_Peso'] = df_plan_inspeccion['%_Peso']
+    df_original_marcado['%_Acumulado'] = df_plan_inspeccion['%_Acumulado']
+    df_original_marcado['Prioridad'] = df_plan_inspeccion['Prioridad']
     
+    columnas_disponibles_orig = df_original_marcado.columns.tolist()
+    
+    # Agregamos las columnas a la lista de interés para exportación
+    cols_interes_original = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad']
+    
+    if 'Unidad' in columnas_disponibles_orig:
+        cols_interes_original.insert(2, 'Unidad')
+    
+    df_listado_completo = df_original_marcado[cols_interes_original].copy()
+    
+    
+    # --- 3. TABLA DE EXCESOS ---
     cols_interes_excesos = ['Clave', 'Concepto', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct']
+    
     if 'Unidad' in columnas_disponibles:
         cols_interes_excesos.insert(2, 'Unidad')
-        
+    
     df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
-
-
+    
+    
+    # --- ESCRITURA EN EXCEL ---
     # 1. Crear el objeto en memoria
     buffer_excel = io.BytesIO()
     
     # 2. Iniciar el Writer
     with pd.ExcelWriter(buffer_excel, engine='xlsxwriter') as writer:
         
+        # Agregar todas las tablas al diccionario de hojas
         hojas = {
             'Conceptos_sobre_Umbral': df_excesos,
             'Var_Por_Partidas': resumen_ejecutivo,
-            'Resumen_Prioridades': df_resumen_final #Solo mostrará las columnas de interés
+            'Resumen_Prioridades': df_resumen_final,
+            'Listado_Completo': df_listado_completo  # Nueva pestaña agregada
         }
     
         workbook = writer.book
