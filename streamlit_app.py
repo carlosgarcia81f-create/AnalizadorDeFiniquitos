@@ -239,7 +239,7 @@ if uploaded_file is not None:
     # --- 3. TABLA DE EXCESOS ---
     cols_interes_excesos = ['Clave', 'Concepto', 'PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct']
     
-    if 'Unidad' in columnas_disponibles:
+    if 'Unidad' in columnas_disponibles_orig:
         cols_interes_excesos.insert(2, 'Unidad')
     
     df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
