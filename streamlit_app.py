@@ -198,6 +198,9 @@ if uploaded_file is not None:
         (df_plan_inspeccion['Monto_Ejecutado'] > 0)
     ].copy()
 
+    # Recalcular el % Acumulado para la muestra final seleccionada
+    df_plan_inspeccion_filtrado['%_Acumulado'] = df_plan_inspeccion_filtrado['%_Peso'].cumsum()
+
     st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO {threshold_alta}/{100-threshold_alta} + REGLAS DE NEGOCIO) ---")
     st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
     st.write(f"Conceptos críticos de alta prioridad seleccionados (incluye reglas de negocio): {len(df_plan_inspeccion_filtrado)}")
