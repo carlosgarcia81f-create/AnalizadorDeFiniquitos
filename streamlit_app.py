@@ -235,18 +235,22 @@ if uploaded_file is not None:
                 st.warning("No hay conceptos en esta categoría que cumplan el criterio.")
                 return df_sub
                 
-            # Bloqueamos todas las columnas excepto el Checkbox para que no modifiquen montos por error
-            columnas_bloqueadas = df_sub.columns.drop('Seleccionado').tolist()
+            # 1. Resetear el índice para asegurar que no haya filas con el mismo ID oculto
+            df_sub = df_sub.reset_index(drop=True)
+            
+            # 2. Sacar explícitamente las columnas ocultas de la lista de bloqueo
+            columnas_ocultas = ['Categoria_Analisis', 'Prioridad']
+            columnas_bloqueadas = [col for col in df_sub.columns if col not in ['Seleccionado'] + columnas_ocultas]
             
             edited_df = st.data_editor(
                 df_sub,
                 column_config={
                     "Seleccionado": st.column_config.CheckboxColumn("Revisar ✅", default=True),
-                    "Monto_Ejecutado": st.column_config.NumberColumn("Monto", format="$ %.2f"),
+                    "Monto_Ejecutado": st.column_config.NumberColumn("Monto", format="$%.2f"), # Quitamos espacio post-signo
                     "Cantidad_Ejecutada": st.column_config.NumberColumn("Cantidad", format="%.2f"),
-                    "%_Peso": st.column_config.NumberColumn("% Peso", format="%.2f %%"),
-                    "%_Acumulado": st.column_config.NumberColumn("% Acumulado", format="%.2f %%"),
-                    "Categoria_Analisis": None, # Ocultamos la categoría porque ya está en la pestaña
+                    "%_Peso": st.column_config.NumberColumn("% Peso", format="%.2f"), # Quitamos los %% para mayor compatibilidad
+                    "%_Acumulado": st.column_config.NumberColumn("% Acumulado", format="%.2f"),
+                    "Categoria_Analisis": None, # Ocultamos la categoría
                     "Prioridad": None # Ocultamos para ahorrar espacio
                 },
                 disabled=columnas_bloqueadas,
