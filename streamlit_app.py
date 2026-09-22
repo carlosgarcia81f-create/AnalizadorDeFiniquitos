@@ -198,18 +198,45 @@ if uploaded_file is not None:
         (df_plan_inspeccion['Monto_Ejecutado'] > 0)
     ].copy()
     
-    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
-    st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
-    st.write(f"Conceptos de prioridad ALTA a revisar en campo (Visibles), gabinete (Piezas) y volumen (Acarreos): {len(df_plan_inspeccion_filtrado)}")
-    st.write("-" * 50)
+        st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
     
-    # Mostrar tabla en Streamlit incluyendo la nueva columna 'Categoria_Analisis'
-    display(df_plan_inspeccion_filtrado[['Categoria_Analisis', 'Prioridad', 'Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
-        '%_Peso': '{:.2f}%',
-        'Monto_Ejecutado': '${:,.2f}',
-        'Cantidad_Ejecutada': '{:,.2f}',
-        '%_Acumulado': '{:.2f}%'
-    }).background_gradient(subset=['%_Acumulado'], cmap='Blues'))
+    # Cuadro explicativo de la metodología para el usuario
+    st.info(
+        "💡 **Nota Metodológica:** Para evitar que los acarreos o suministros sesguen la muestra, "
+        "el análisis de Pareto se calculó de forma **independiente** (cada grupo suma su propio 100%):\n"
+        "* **Visibles:** Conceptos revisables físicamente en campo (pisos, banquetas, etc.).\n"
+        "* **Acarreos (m3-km):** Revisión basada en volumetría y generadores.\n"
+        "* **Piezas (pza):** Revisión de gabinete o conteo de inventario."
+    )
+    
+    st.write(f"Conceptos críticos totales identificados: **{len(df_plan_inspeccion_filtrado)}**")
+    
+    # Crear pestañas en Streamlit
+    tab1, tab2, tab3 = st.tabs(["🏗️ Visibles en Campo", "🚚 Acarreos (Volumetría)", "📦 Piezas (Gabinete)"])
+    
+    # Función auxiliar para dar formato a las sub-tablas
+    def formato_tabla_pareto(df_sub):
+        return df_sub[['Partida_Principal', 'Clave', 'Concepto', 'Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
+            '%_Peso': '{:.2f}%',
+            'Monto_Ejecutado': '${:,.2f}',
+            'Cantidad_Ejecutada': '{:,.2f}',
+            '%_Acumulado': '{:.2f}%'
+        }).background_gradient(subset=['%_Acumulado'], cmap='Blues')
+    
+    with tab1:
+        df_visibles = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'VISIBLES (GENERAL)']
+        st.write(f"**{len(df_visibles)} conceptos** prioritarios para revisión física.")
+        display(formato_tabla_pareto(df_visibles))
+    
+    with tab2:
+        df_acarreos = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'ACARREOS']
+        st.write(f"**{len(df_acarreos)} conceptos** prioritarios para revisión de generadores/topografía.")
+        display(formato_tabla_pareto(df_acarreos))
+    
+    with tab3:
+        df_piezas = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'PIEZAS']
+        st.write(f"**{len(df_piezas)} conceptos** prioritarios para conteo físico o revisión de facturas.")
+        display(formato_tabla_pareto(df_piezas))
 
     #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
     #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
