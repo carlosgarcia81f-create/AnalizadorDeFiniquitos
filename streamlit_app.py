@@ -265,7 +265,7 @@ if uploaded_file is not None:
     
     # Definimos las columnas a exportar
     columnas_disponibles_raw = df_original_marcado.columns.tolist()
-    cols_interes_original = ['Clave', 'Concepto', 'Unidad','PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad','Categoria_Analisis']
+    cols_interes_original = ['Clave', 'Concepto','PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad','Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_raw:
         cols_interes_original.insert(2, 'Unidad')
@@ -274,7 +274,7 @@ if uploaded_file is not None:
     
         # --- 2. LISTADO FILTRADO PARETO (Prioridad, % Peso y % Acumulado) ---
     columnas_disponibles_filtrado = df_plan_inspeccion_filtrado.columns.tolist()
-    cols_interes_resumen_prioridades = ['Clave', 'Concepto','Unidad', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad','Categoria_Analisis']
+    cols_interes_resumen_prioridades = ['Clave', 'Concepto','PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad','Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_filtrado:
         cols_interes_resumen_prioridades.insert(2, 'Unidad')
@@ -283,7 +283,7 @@ if uploaded_file is not None:
     
     
     # --- 3. TABLA DE EXCESOS ---
-    cols_interes_excesos = ['Clave', 'Concepto', 'Unidad','PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct']
+    cols_interes_excesos = ['Clave', 'Concepto','PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct']
     
     if 'Unidad' in columnas_disponibles_filtrado:
         cols_interes_excesos.insert(2, 'Unidad')
