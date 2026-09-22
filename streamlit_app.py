@@ -97,10 +97,10 @@ if uploaded_file is not None:
     # Create a new column for the formatted percentage for display purposes
     df_finiquito_auditoria['Variacion_Pct_%'] = df_finiquito_auditoria['Variacion_Pct'].apply(lambda x: f'{x:.2%}')
     # Filtramos los que superan el porcentaje señalado (using the numeric Variacion_Pct)
-     = df_finiquito_auditoria[df_finiquito_auditoria['Variacion_Pct'] > porcentajeRespectoContrato]
+    excesos = df_finiquito_auditoria[df_finiquito_auditoria['Variacion_Pct'] > porcentajeRespectoContrato]
     
-    st.write(f"Se encontraron {len()} conceptos con un porcentaje de {porcentajeRespectoContrato*100}% superior respecto del porcentaje contratado")
-    display(excesos[['Clave', 'Partida_Principal', 'Subpartida', 'Concepto','Unidad' 'Monto_Contratado','Monto_Ejecutado','Variacion_Pct_%']])
+    st.write(f"Se encontraron {len(excesos)} conceptos con un porcentaje de {porcentajeRespectoContrato*100}% superior respecto del porcentaje contratado")
+    display(excesos[['Clave', 'Partida_Principal', 'Subpartida', 'Concepto', 'Unidad', 'Monto_Contratado', 'Monto_Ejecutado', 'Variacion_Pct_%']])
     
     #---------------------- 8. RESUMEN EJECUTIVO (CORREGIDO) ---------------------------------------------------------------------------------------------
     resumen_ejecutivo = df_finiquito_auditoria.groupby(['Partida_Principal', 'Subpartida']).agg({
