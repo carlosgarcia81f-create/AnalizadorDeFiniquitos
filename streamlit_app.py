@@ -184,11 +184,15 @@ if uploaded_file is not None:
                 df_cat['%_Peso'] = 0.0
                 
             df_cat['%_Acumulado'] = df_cat['%_Peso'].cumsum()
+        
+            # NUEVA LÓGICA: Calculamos el acumulado de la fila anterior. 
+            # Esto asegura que el concepto que "rompe" la barrera del 80% sí se incluya en ALTA.
+            acumulado_anterior = df_cat['%_Acumulado'] - df_cat['%_Peso']
             
-            # Asignación de prioridades
+            # Asignación de prioridades corregida
             condiciones_pareto = [
-                (df_cat['%_Acumulado'] <= threshold_alta),
-                (df_cat['%_Acumulado'] <= threshold_media)
+                (acumulado_anterior < threshold_alta),
+                (acumulado_anterior < threshold_media)
             ]
             elecciones_pareto = ['ALTA', 'MEDIA']
             df_cat['Prioridad'] = np.select(condiciones_pareto, elecciones_pareto, default='BAJA')
