@@ -169,7 +169,7 @@ if uploaded_file is not None:
     threshold_alta = porcentaje_pareto
     threshold_media = threshold_alta + 5
     
-    for categoria in ['VISIBLES (GENERAL)', 'PIEZAS', 'ACARREOS']:
+    for categoria in df_finiquito_auditoria['Categoria_Analisis'].unique():
         df_cat = df_finiquito_auditoria[df_finiquito_auditoria['Categoria_Analisis'] == categoria].copy()
         
         if not df_cat.empty:
@@ -230,17 +230,17 @@ if uploaded_file is not None:
         }).background_gradient(subset=['%_Acumulado'], cmap='Blues')
     
     with tab1:
-        df_visibles = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'VISIBLES (GENERAL)']
+        df_visibles = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'INSPECCIÓN FÍSICA CAMPO (Visibles)']
         st.write(f"**{len(df_visibles)} conceptos** prioritarios para revisión física.")
         display(formato_tabla_pareto(df_visibles))
     
     with tab2:
-        df_acarreos = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'ACARREOS']
+        df_acarreos = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN VOLUMÉTRICA (Acarreos)']
         st.write(f"**{len(df_acarreos)} conceptos** prioritarios para revisión de generadores/topografía.")
         display(formato_tabla_pareto(df_acarreos))
     
     with tab3:
-        df_piezas = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'PIEZAS']
+        df_piezas = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN GABINETE/CONTEO (Piezas)']
         st.write(f"**{len(df_piezas)} conceptos** prioritarios para conteo físico o revisión de facturas.")
         display(formato_tabla_pareto(df_piezas))
 
