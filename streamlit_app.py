@@ -209,7 +209,7 @@ if uploaded_file is not None:
     ].copy()
     
     st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
-    
+
     # Cuadro explicativo de la metodología para el usuario
     st.info(
         "💡 **Nota Metodológica:** Para evitar que los acarreos o suministros sesguen la muestra, "
@@ -219,7 +219,14 @@ if uploaded_file is not None:
         "* **Piezas (pza):** Revisión de gabinete o conteo de inventario."
     )
     
-    st.write(f"Conceptos críticos totales identificados: **{len(df_plan_inspeccion_filtrado)}**")
+    # --- NUEVOS CÁLCULOS DE REPRESENTATIVIDAD ---
+    monto_total_obra = df_finiquito_auditoria['Monto_Ejecutado'].sum()
+    monto_revisar_total = df_plan_inspeccion_filtrado['Monto_Ejecutado'].sum()
+    pct_revisar_total = (monto_revisar_total / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+    
+    st.write(f"Monto Total Ejecutado de la Obra: **${monto_total_obra:,.2f}**")
+    st.write(f"Monto Total a Revisar (Suma de Prioridades ALTA): **${monto_revisar_total:,.2f} ({pct_revisar_total:.2f}% de la obra)**")
+    st.write("-" * 50)
     
     # Crear pestañas en Streamlit
     tab1, tab2, tab3 = st.tabs(["🏗️ Visibles en Campo", "🚚 Acarreos (Volumetría)", "📦 Piezas (Gabinete)"])
@@ -235,17 +242,29 @@ if uploaded_file is not None:
     
     with tab1:
         df_visibles = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'INSPECCIÓN FÍSICA CAMPO (Visibles)']
+        monto_visibles = df_visibles['Monto_Ejecutado'].sum()
+        pct_visibles = (monto_visibles / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        
         st.write(f"**{len(df_visibles)} conceptos** prioritarios para revisión física.")
+        st.success(f"💰 Representan **${monto_visibles:,.2f}** (El **{pct_visibles:.2f}%** del total de la obra)")
         display(formato_tabla_pareto(df_visibles))
     
     with tab2:
         df_acarreos = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN VOLUMÉTRICA (Acarreos)']
+        monto_acarreos = df_acarreos['Monto_Ejecutado'].sum()
+        pct_acarreos = (monto_acarreos / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        
         st.write(f"**{len(df_acarreos)} conceptos** prioritarios para revisión de generadores/topografía.")
+        st.success(f"💰 Representan **${monto_acarreos:,.2f}** (El **{pct_acarreos:.2f}%** del total de la obra)")
         display(formato_tabla_pareto(df_acarreos))
     
     with tab3:
         df_piezas = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN GABINETE/CONTEO (Piezas)']
+        monto_piezas = df_piezas['Monto_Ejecutado'].sum()
+        pct_piezas = (monto_piezas / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        
         st.write(f"**{len(df_piezas)} conceptos** prioritarios para conteo físico o revisión de facturas.")
+        st.success(f"💰 Representan **${monto_piezas:,.2f}** (El **{pct_piezas:.2f}%** del total de la obra)")
         display(formato_tabla_pareto(df_piezas))
 
     #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
