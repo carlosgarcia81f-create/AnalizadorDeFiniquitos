@@ -14,20 +14,6 @@ nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
 umbral_exceso = st.sidebar.number_input("Umbral de exceso respecto a contrato en %", value=30)
 porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
 
-# =========================================================================
-# REGLAS DE NEGOCIO: PALABRAS CLAVE POR DEFECTO PARA URBANIZACIÓN / CALLES
-# =========================================================================
-opciones_predeterminadas = [
-    'luminaria', 'lámpara', 'toma', 'válvula', 
-    'bomba', 'poste', 'descarga domicilaria', 'pozo', 'registro', 'boca'
-]
-
-conceptos_visibles_criticos = st.sidebar.multiselect(
-    "Conceptos críticos a promover (Reglas de Negocio):",
-    options=opciones_predeterminadas + ['mampostería', 'muro'], # Opciones sugeridas extra
-    default=opciones_predeterminadas # Lo que aparece seleccionado por defecto
-)
-
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
 
 # Definir display como un alias de st.write para que no marque error
@@ -156,58 +142,69 @@ if uploaded_file is not None:
         'Diferencia_Absoluta': '${:,.2f}',
         '%_Variacion_Global': '{:.2f}%'
     }).background_gradient(subset=['%_Variacion_Global'], cmap='YlOrRd'))
-    #---------------------- 9. PLANEACIÓN DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO CON CONFIGURACIÓN) ------------------------------------------
-    
-    # 1. Ordenamos de mayor a menor importancia económica
-    df_plan_inspeccion = df_finiquito_auditoria.sort_values(by='Monto_Ejecutado', ascending=False).copy()
-    
-    # 2. Calculamos el peso de cada concepto y su acumulado
-    total_finiquito = df_plan_inspeccion['Monto_Ejecutado'].sum()
-    if total_finiquito > 0:
-        df_plan_inspeccion['%_Peso'] = (df_plan_inspeccion['Monto_Ejecutado'] / total_finiquito) * 100
-    else:
-        df_plan_inspeccion['%_Peso'] = 0.0
-        
-    df_plan_inspeccion['%_Acumulado'] = df_plan_inspeccion['%_Peso'].cumsum()
-    
-    # 3. Definimos quiénes son del Grupo A (Prioridad Alta) usando el porcentaje configurable
-    threshold_alta = porcentaje_pareto 
-    threshold_media = threshold_alta + 5 
-    
-    # Asignación de prioridades iniciales por Pareto (CORREGIDO UTILIZANDO %_Acumulado)
-    condiciones = [
-        (df_plan_inspeccion['%_Acumulado'] <= threshold_alta),
-        (df_plan_inspeccion['%_Acumulado'] <= threshold_media)
-    ]
-    elecciones = ['ALTA', 'MEDIA']
-    df_plan_inspeccion['Prioridad'] = np.select(condiciones, elecciones, default='BAJA')
+   #---------------------- 9. PLANEACIÓN DE INSPECCIÓN FÍSICA (PARETO POR CATEGORÍAS) ------------------------------------------
 
-    # =========================================================================
-    # FASE 1: PROMOVER CONCEPTOS VISIBLES O CRÍTICOS (Reglas de Negocio desde Interfaz)
-    # =========================================================================
-    # Recorremos la lista dinámica que viene del multiselect de la barra lateral
-    for palabra in conceptos_visibles_criticos:
-        # Usamos .str.contains con minúsculas para asegurar coincidencias parciales
-        mascara_sensible = df_plan_inspeccion['Concepto'].str.lower().str.contains(palabra.lower(), na=False)
-        df_plan_inspeccion.loc[mascara_sensible, 'Prioridad'] = 'ALTA'
-    # =========================================================================
+    # 1. Normalizar la columna Unidad para facilitar la búsqueda
+    if 'Unidad' in df_finiquito_auditoria.columns:
+        df_finiquito_auditoria['Unidad_Norm'] = df_finiquito_auditoria['Unidad'].astype(str).str.strip().str.upper()
+    else:
+        df_finiquito_auditoria['Unidad_Norm'] = 'N/A'
     
-    # Filtrar: Que tengan prioridad ALTA y que además el monto ejecutado sea mayor a cero
+    # 2. Clasificar los conceptos en categorías
+    condiciones_unidad = [
+        df_finiquito_auditoria['Unidad_Norm'].isin(['PZA', 'PIEZA', 'PZA.', 'PZAS', 'PZAS.']),
+        df_finiquito_auditoria['Unidad_Norm'].str.contains('M3-KM', na=False) | df_finiquito_auditoria['Unidad_Norm'].str.contains('M3/KM', na=False)
+    ]
+    elecciones_categoria = ['PIEZAS', 'ACARREOS']
+    df_finiquito_auditoria['Categoria_Analisis'] = np.select(condiciones_unidad, elecciones_categoria, default='VISIBLES (GENERAL)')
+    
+    # 3. Aplicar Pareto separado por cada categoría
+    dfs_pareto = []
+    threshold_alta = porcentaje_pareto
+    threshold_media = threshold_alta + 5
+    
+    for categoria in ['VISIBLES (GENERAL)', 'PIEZAS', 'ACARREOS']:
+        df_cat = df_finiquito_auditoria[df_finiquito_auditoria['Categoria_Analisis'] == categoria].copy()
+        
+        if not df_cat.empty:
+            # Ordenamos de mayor a menor importe dentro de la categoría
+            df_cat = df_cat.sort_values(by='Monto_Ejecutado', ascending=False)
+            
+            # El peso y el acumulado se calculan respecto al total de su propia categoría
+            total_cat = df_cat['Monto_Ejecutado'].sum()
+            if total_cat > 0:
+                df_cat['%_Peso'] = (df_cat['Monto_Ejecutado'] / total_cat) * 100
+            else:
+                df_cat['%_Peso'] = 0.0
+                
+            df_cat['%_Acumulado'] = df_cat['%_Peso'].cumsum()
+            
+            # Asignación de prioridades
+            condiciones_pareto = [
+                (df_cat['%_Acumulado'] <= threshold_alta),
+                (df_cat['%_Acumulado'] <= threshold_media)
+            ]
+            elecciones_pareto = ['ALTA', 'MEDIA']
+            df_cat['Prioridad'] = np.select(condiciones_pareto, elecciones_pareto, default='BAJA')
+            
+            dfs_pareto.append(df_cat)
+    
+    # 4. Unir y filtrar los resultados finales
+    df_plan_inspeccion = pd.concat(dfs_pareto)
+    
+    # Nos quedamos con la prioridad ALTA de las tres categorías
     df_plan_inspeccion_filtrado = df_plan_inspeccion[
         (df_plan_inspeccion['Prioridad'] == 'ALTA') & 
         (df_plan_inspeccion['Monto_Ejecutado'] > 0)
     ].copy()
-
-    # Recalcular el % Acumulado para la muestra final seleccionada
-    df_plan_inspeccion_filtrado['%_Acumulado'] = df_plan_inspeccion_filtrado['%_Peso'].cumsum()
-
-    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA (ANÁLISIS DE PARETO {threshold_alta}/{100-threshold_alta} + REGLAS DE NEGOCIO) ---")
+    
+    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
     st.write(f"Total de conceptos en la obra: {len(df_plan_inspeccion)}")
-    st.write(f"Conceptos críticos de alta prioridad seleccionados (incluye reglas de negocio): {len(df_plan_inspeccion_filtrado)}")
+    st.write(f"Conceptos de prioridad ALTA a revisar en campo (Visibles), gabinete (Piezas) y volumen (Acarreos): {len(df_plan_inspeccion_filtrado)}")
     st.write("-" * 50)
     
-    # Mostrar tabla en Streamlit
-    display(df_plan_inspeccion_filtrado[['Prioridad','Partida_Principal', 'Subpartida', 'Clave', 'Concepto','Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
+    # Mostrar tabla en Streamlit incluyendo la nueva columna 'Categoria_Analisis'
+    display(df_plan_inspeccion_filtrado[['Categoria_Analisis', 'Prioridad', 'Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
         '%_Peso': '{:.2f}%',
         'Monto_Ejecutado': '${:,.2f}',
         'Cantidad_Ejecutada': '{:,.2f}',
@@ -230,7 +227,7 @@ if uploaded_file is not None:
     
     # Definimos las columnas a exportar
     columnas_disponibles_raw = df_original_marcado.columns.tolist()
-    cols_interes_original = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad']
+    cols_interes_original = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad','Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_raw:
         cols_interes_original.insert(2, 'Unidad')
@@ -239,7 +236,7 @@ if uploaded_file is not None:
     
         # --- 2. LISTADO FILTRADO PARETO (Prioridad, % Peso y % Acumulado) ---
     columnas_disponibles_filtrado = df_plan_inspeccion_filtrado.columns.tolist()
-    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad']
+    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad','Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_filtrado:
         cols_interes_resumen_prioridades.insert(2, 'Unidad')
