@@ -218,8 +218,9 @@ if uploaded_file is not None:
     # Usamos df_finiquito, que contiene TODAS las filas originales (incluyendo títulos de partidas sin PU)
     df_original_marcado = df_finiquito.copy()
     
-    # Mapeamos la Prioridad de todos los conceptos analizados
+    # Mapeamos la Prioridad y la Categoría de todos los conceptos analizados
     df_original_marcado['Prioridad'] = df_plan_inspeccion['Prioridad']
+    df_original_marcado['Categoria_Analisis'] = df_plan_inspeccion['Categoria_Analisis'] # <--- AGREGA ESTA LÍNEA
     
     # Mapeamos el Peso y Acumulado ÚNICAMENTE de la tabla filtrada final (para que coincidan exacto con la app)
     df_original_marcado['%_Peso'] = df_plan_inspeccion_filtrado['%_Peso']
