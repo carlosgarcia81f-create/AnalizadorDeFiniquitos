@@ -10,7 +10,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 st.title("Analizador de Finiquitos")
 # 2. Controles laterales (lo que eran tus variables de @param)
 filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
-nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="12")
+nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="11")
 umbral_exceso = st.sidebar.number_input("Umbral de exceso respecto a contrato en %", value=30)
 porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
 
@@ -227,7 +227,7 @@ if uploaded_file is not None:
     
     # Definimos las columnas a exportar
     columnas_disponibles_raw = df_original_marcado.columns.tolist()
-    cols_interes_original = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad','Categoria_Analisis']
+    cols_interes_original = ['Clave', 'Concepto', 'Unidad','PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad','Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_raw:
         cols_interes_original.insert(2, 'Unidad')
@@ -236,7 +236,7 @@ if uploaded_file is not None:
     
         # --- 2. LISTADO FILTRADO PARETO (Prioridad, % Peso y % Acumulado) ---
     columnas_disponibles_filtrado = df_plan_inspeccion_filtrado.columns.tolist()
-    cols_interes_resumen_prioridades = ['Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad','Categoria_Analisis']
+    cols_interes_resumen_prioridades = ['Clave', 'Concepto','Unidad', 'PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad','Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_filtrado:
         cols_interes_resumen_prioridades.insert(2, 'Unidad')
