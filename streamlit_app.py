@@ -199,73 +199,106 @@ if uploaded_file is not None:
             
             dfs_pareto.append(df_cat)
     
-    # 4. Unir y filtrar los resultados finales
-    df_plan_inspeccion = pd.concat(dfs_pareto)
-    
-    # Nos quedamos con la prioridad ALTA de las tres categorías
-    df_plan_inspeccion_filtrado = df_plan_inspeccion[
-        (df_plan_inspeccion['Prioridad'] == 'ALTA') & 
-        (df_plan_inspeccion['Monto_Ejecutado'] > 0)
-    ].copy()
-    
-    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
-
-    # Cuadro explicativo de la metodología para el usuario
-    st.info(
-        "💡 **Nota Metodológica:** Para evitar que los acarreos o suministros sesguen la muestra, "
-        "el análisis de Pareto se calculó de forma **independiente** (cada grupo suma su propio 100%):\n"
-        "* **Visibles:** Conceptos revisables físicamente en campo (pisos, banquetas, etc.).\n"
-        "* **Acarreos (m3-km):** Revisión basada en volumetría y generadores.\n"
-        "* **Piezas (pza):** Revisión de gabinete o conteo de inventario."
-    )
-    
-    # --- NUEVOS CÁLCULOS DE REPRESENTATIVIDAD ---
-    monto_total_obra = df_finiquito_auditoria['Monto_Ejecutado'].sum()
-    monto_revisar_total = df_plan_inspeccion_filtrado['Monto_Ejecutado'].sum()
-    pct_revisar_total = (monto_revisar_total / monto_total_obra) * 100 if monto_total_obra > 0 else 0
-    
-    st.write(f"Monto Total Ejecutado de la Obra: **${monto_total_obra:,.2f}**")
-    st.write(f"Monto Total a Revisar (Suma de Prioridades ALTA): **${monto_revisar_total:,.2f} ({pct_revisar_total:.2f}% de la obra)**")
-    st.write("-" * 50)
-    
-    # Crear pestañas en Streamlit
-    tab1, tab2, tab3 = st.tabs(["🏗️ Visibles en Campo", "🚚 Acarreos (Volumetría)", "📦 Piezas (Gabinete)"])
-    
-    # Función auxiliar para dar formato a las sub-tablas
-    def formato_tabla_pareto(df_sub):
-        return df_sub[['Partida_Principal', 'Clave', 'Concepto', 'Cantidad_Ejecutada', 'Monto_Ejecutado', '%_Peso', '%_Acumulado']].style.format({
-            '%_Peso': '{:.2f}%',
-            'Monto_Ejecutado': '${:,.2f}',
-            'Cantidad_Ejecutada': '{:,.2f}',
-            '%_Acumulado': '{:.2f}%'
-        }).background_gradient(subset=['%_Acumulado'], cmap='Blues')
-    
-    with tab1:
-        df_visibles = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'INSPECCIÓN FÍSICA CAMPO (Visibles)']
-        monto_visibles = df_visibles['Monto_Ejecutado'].sum()
-        pct_visibles = (monto_visibles / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        # 4. Unir y filtrar los resultados finales
+        df_plan_inspeccion = pd.concat(dfs_pareto)
         
-        st.write(f"**{len(df_visibles)} conceptos** prioritarios para revisión física.")
-        st.success(f"💰 Representan **${monto_visibles:,.2f}** (El **{pct_visibles:.2f}%** del total de la obra)")
-        display(formato_tabla_pareto(df_visibles))
-    
-    with tab2:
-        df_acarreos = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN VOLUMÉTRICA (Acarreos)']
-        monto_acarreos = df_acarreos['Monto_Ejecutado'].sum()
-        pct_acarreos = (monto_acarreos / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        # Nos quedamos con la prioridad ALTA de las tres categorías
+        df_plan_inspeccion_filtrado = df_plan_inspeccion[
+            (df_plan_inspeccion['Prioridad'] == 'ALTA') & 
+            (df_plan_inspeccion['Monto_Ejecutado'] > 0)
+        ].copy()
         
-        st.write(f"**{len(df_acarreos)} conceptos** prioritarios para revisión de generadores/topografía.")
-        st.success(f"💰 Representan **${monto_acarreos:,.2f}** (El **{pct_acarreos:.2f}%** del total de la obra)")
-        display(formato_tabla_pareto(df_acarreos))
-    
-    with tab3:
-        df_piezas = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN GABINETE/CONTEO (Piezas)']
-        monto_piezas = df_piezas['Monto_Ejecutado'].sum()
-        pct_piezas = (monto_piezas / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        # NUEVO: Agregamos una columna booleana para los checkboxes
+        df_plan_inspeccion_filtrado.insert(0, 'Seleccionado', True)
         
-        st.write(f"**{len(df_piezas)} conceptos** prioritarios para conteo físico o revisión de facturas.")
-        st.success(f"💰 Representan **${monto_piezas:,.2f}** (El **{pct_piezas:.2f}%** del total de la obra)")
-        display(formato_tabla_pareto(df_piezas))
+        # --- CÁLCULOS BASE ---
+        monto_total_obra = df_finiquito_auditoria['Monto_Ejecutado'].sum()
+        
+        st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
+        st.info(
+            "💡 **Nota Metodológica:** El análisis se calculó de forma independiente. "
+            "Usa las tablas inferiores para desmarcar los conceptos que por cuestiones técnicas o físicas no revisarás. "
+            "El dashboard se actualizará automáticamente."
+        )
+        
+        # --- CREACIÓN DEL DASHBOARD INTERACTIVO ---
+        st.markdown("### 📊 Dashboard de Selección de Auditoría")
+        # Usamos un contenedor vacío para poder imprimir los resultados DESPUÉS de que el usuario interactúe con las tablas
+        dashboard_placeholder = st.empty() 
+        
+        # Crear pestañas en Streamlit
+        tab1, tab2, tab3 = st.tabs(["🏗️ Visibles en Campo", "🚚 Acarreos (Volumetría)", "📦 Piezas (Gabinete)"])
+        
+        # Función auxiliar para crear tablas editables (Checkboxes)
+        def mostrar_editor_interactivo(df_sub, key):
+            if df_sub.empty:
+                st.warning("No hay conceptos en esta categoría que cumplan el criterio.")
+                return df_sub
+                
+            # Bloqueamos todas las columnas excepto el Checkbox para que no modifiquen montos por error
+            columnas_bloqueadas = df_sub.columns.drop('Seleccionado').tolist()
+            
+            edited_df = st.data_editor(
+                df_sub,
+                column_config={
+                    "Seleccionado": st.column_config.CheckboxColumn("Revisar ✅", default=True),
+                    "Monto_Ejecutado": st.column_config.NumberColumn("Monto", format="$ %.2f"),
+                    "Cantidad_Ejecutada": st.column_config.NumberColumn("Cantidad", format="%.2f"),
+                    "%_Peso": st.column_config.NumberColumn("% Peso", format="%.2f %%"),
+                    "%_Acumulado": st.column_config.NumberColumn("% Acumulado", format="%.2f %%"),
+                    "Categoria_Analisis": None, # Ocultamos la categoría porque ya está en la pestaña
+                    "Prioridad": None # Ocultamos para ahorrar espacio
+                },
+                disabled=columnas_bloqueadas,
+                hide_index=True,
+                use_container_width=True,
+                key=key
+            )
+            return edited_df
+        
+        # Desplegar tablas interactivas
+        with tab1:
+            df_visibles = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'INSPECCIÓN FÍSICA CAMPO (Visibles)']
+            edited_visibles = mostrar_editor_interactivo(df_visibles, "editor_visibles")
+        
+        with tab2:
+            df_acarreos = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN VOLUMÉTRICA (Acarreos)']
+            edited_acarreos = mostrar_editor_interactivo(df_acarreos, "editor_acarreos")
+        
+        with tab3:
+            df_piezas = df_plan_inspeccion_filtrado[df_plan_inspeccion_filtrado['Categoria_Analisis'] == 'REVISIÓN GABINETE/CONTEO (Piezas)']
+            edited_piezas = mostrar_editor_interactivo(df_piezas, "editor_piezas")
+        
+        # --- ACTUALIZACIÓN DE VARIABLES POST-SELECCIÓN ---
+        # Filtramos para quedarnos solo con lo que el usuario DEJÓ marcado
+        sel_visibles = edited_visibles[edited_visibles['Seleccionado']]
+        sel_acarreos = edited_acarreos[edited_acarreos['Seleccionado']]
+        sel_piezas = edited_piezas[edited_piezas['Seleccionado']]
+        
+        monto_sel_visibles = sel_visibles['Monto_Ejecutado'].sum()
+        monto_sel_acarreos = sel_acarreos['Monto_Ejecutado'].sum()
+        monto_sel_piezas = sel_piezas['Monto_Ejecutado'].sum()
+        
+        monto_revisar_total = monto_sel_visibles + monto_sel_acarreos + monto_sel_piezas
+        pct_revisar_total = (monto_revisar_total / monto_total_obra) * 100 if monto_total_obra > 0 else 0
+        
+        # Llenar el Dashboard en la parte superior con la info actualizada
+        with dashboard_placeholder.container():
+            cols = st.columns(4)
+            # Mostramos los indicadores. delta_color="off" pone el subtítulo en gris (neutral).
+            cols[0].metric("💰 Total de la Obra", f"${monto_total_obra:,.2f}")
+            cols[1].metric("🎯 Total a Revisar", f"${monto_revisar_total:,.2f}", f"{pct_revisar_total:.2f}% de la obra", delta_color="off")
+            cols[2].metric("🏗️ Visibles (Campo)", f"${monto_sel_visibles:,.2f}", f"{(monto_sel_visibles/monto_total_obra)*100:.2f}%", delta_color="off")
+            cols[3].metric("📦 Acarreos + Piezas", f"${(monto_sel_acarreos + monto_sel_piezas):,.2f}", f"{((monto_sel_acarreos + monto_sel_piezas)/monto_total_obra)*100:.2f}%", delta_color="off")
+            
+            # Barra de progreso visual
+            progreso_normalizado = min(pct_revisar_total / 100.0, 1.0) # Evita que pase del 100% y lance error
+            st.progress(progreso_normalizado, text=f"Porcentaje de auditoría cubierto en el plan de inspección: {pct_revisar_total:.2f}%")
+            st.write("-" * 50)
+        
+        # 5. SOBRESCRIBIR EL DATAFRAME FINAL
+        # Al juntar solo las selecciones, garantizamos que el Módulo 2 de Excel exporte ÚNICAMENTE lo que elegiste.
+        df_plan_inspeccion_filtrado = pd.concat([sel_visibles, sel_acarreos, sel_piezas])
 
     #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
     #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
