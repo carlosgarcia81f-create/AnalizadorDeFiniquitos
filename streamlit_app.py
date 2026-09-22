@@ -198,7 +198,7 @@ if uploaded_file is not None:
         (df_plan_inspeccion['Monto_Ejecutado'] > 0)
     ].copy()
     
-        st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
+    st.write(f"\n--- ESTRATEGIA DE INSPECCIÓN FÍSICA SEPARADA (PARETO {threshold_alta}%) ---")
     
     # Cuadro explicativo de la metodología para el usuario
     st.info(
