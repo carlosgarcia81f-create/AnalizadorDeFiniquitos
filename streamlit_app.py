@@ -144,19 +144,25 @@ if uploaded_file is not None:
     }).background_gradient(subset=['%_Variacion_Global'], cmap='YlOrRd'))
    #---------------------- 9. PLANEACIÓN DE INSPECCIÓN FÍSICA (PARETO POR CATEGORÍAS) ------------------------------------------
 
-    # 1. Normalizar la columna Unidad para facilitar la búsqueda
+    # 1. Normalizar la columna Unidad (convierte a mayúsculas y quita espacios en los extremos)
     if 'Unidad' in df_finiquito_auditoria.columns:
         df_finiquito_auditoria['Unidad_Norm'] = df_finiquito_auditoria['Unidad'].astype(str).str.strip().str.upper()
     else:
         df_finiquito_auditoria['Unidad_Norm'] = 'N/A'
     
-    # 2. Clasificar los conceptos en categorías
+    # 2. Clasificar los conceptos con validación flexible
+    # Lista exhaustiva para todas las variantes posibles de piezas
+    variantes_piezas = ['PZA', 'PZA.', 'PZAS', 'PZAS.', 'PIEZA', 'PIEZAS', 'PZ', 'PZ.', 'P.']
+    
+    # Condiciones usando búsqueda exacta (para piezas) y Regex (para acarreos)
     condiciones_unidad = [
-        df_finiquito_auditoria['Unidad_Norm'].isin(['PZA', 'PIEZA', 'PZA.', 'PZAS', 'PZAS.']),
-        df_finiquito_auditoria['Unidad_Norm'].str.contains('M3-KM', na=False) | df_finiquito_auditoria['Unidad_Norm'].str.contains('M3/KM', na=False)
+        df_finiquito_auditoria['Unidad_Norm'].isin(variantes_piezas),
+        # El regex r'M3\s*[-\/]\s*KM' encuentra "M3-KM", "M3/KM", e incluso variaciones con espacios como "M3 / KM"
+        df_finiquito_auditoria['Unidad_Norm'].str.contains(r'M3\s*[-\/]\s*KM', regex=True, na=False)
     ]
-    elecciones_categoria = ['PIEZAS', 'ACARREOS']
-    df_finiquito_auditoria['Categoria_Analisis'] = np.select(condiciones_unidad, elecciones_categoria, default='VISIBLES (GENERAL)')
+    
+    elecciones_categoria = ['REVISIÓN GABINETE/CONTEO (Piezas)', 'REVISIÓN VOLUMÉTRICA (Acarreos)']
+    df_finiquito_auditoria['Categoria_Analisis'] = np.select(condiciones_unidad, elecciones_categoria, default='INSPECCIÓN FÍSICA CAMPO (Visibles)')
     
     # 3. Aplicar Pareto separado por cada categoría
     dfs_pareto = []
