@@ -355,23 +355,19 @@ if uploaded_file is not None:
     
     df_listado_completo = df_original_marcado[cols_interes_original].copy()
     
-        # --- 2. LISTADO FILTRADO PARETO (Prioridad, % Peso y % Acumulado) ---
-    columnas_disponibles_filtrado = df_plan_inspeccion_filtrado.columns.tolist()
-    cols_interes_resumen_prioridades = ['Clave', 'Concepto','PU', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado','Prioridad','Categoria_Analisis']
+    # --- 2. LISTADO FILTRADO PARETO (Prioridad, % Peso y % Acumulado) ---
+    # 1. Cambiamos a df_final_descarga
+    columnas_disponibles_filtrado = df_final_descarga.columns.tolist() 
+    
+    # 2. Agregamos 'Estrategia_Revision' al principio de tu lista de columnas
+    cols_interes_resumen_prioridades = ['Estrategia_Revision', 'Clave', 'Concepto', 'PU', 'Cantidad_Ejecutada', 'Monto_Ejecutado', 'Partida_Principal', 'Subpartida', '%_Peso', '%_Acumulado', 'Prioridad', 'Categoria_Analisis']
     
     if 'Unidad' in columnas_disponibles_filtrado:
-        cols_interes_resumen_prioridades.insert(2, 'Unidad')
+        # 3. Cambiamos el insert a la posición 3 para que 'Unidad' quede después de 'Concepto'
+        cols_interes_resumen_prioridades.insert(3, 'Unidad') 
     
-    df_resumen_final = df_plan_inspeccion_filtrado[cols_interes_resumen_prioridades].copy()
-    
-    
-    # --- 3. TABLA DE EXCESOS ---
-    cols_interes_excesos = ['Clave', 'Concepto','PU', 'Monto_Contratado', 'Cantidad_Ejecutada','Monto_Ejecutado', 'Partida_Principal', 'Subpartida', 'Variacion_Pct']
-    
-    if 'Unidad' in columnas_disponibles_filtrado:
-        cols_interes_excesos.insert(2, 'Unidad')
-    
-    df_excesos = df_plan_inspeccion_filtrado[cols_interes_excesos].copy()
+    # 4. Cambiamos a df_final_descarga
+    df_resumen_final = df_final_descarga[cols_interes_resumen_prioridades].copy()
     
     
     # --- ESCRITURA EN EXCEL ---
@@ -467,6 +463,6 @@ if uploaded_file is not None:
     st.download_button(
         label="📥 Descargar Reporte de Auditoría Final",
         data=buffer_excel.getvalue(),
-        file_name="Reporte_Final_Auditoria.xlsx",
+        file_name="Reporte_Final_Auditoria_ST.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
