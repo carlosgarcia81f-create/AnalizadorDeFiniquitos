@@ -12,6 +12,8 @@ st.title("Analizador de Finiquitos")
 filas_a_saltar = st.sidebar.number_input("Filas a saltar", value=11)
 nombre_hoja = st.sidebar.text_input("Nombre de la hoja", value="11")
 umbral_exceso = st.sidebar.number_input("Umbral de exceso respecto a contrato en %", value=30)
+# NUEVO: Filtro de materialidad económica
+umbral_monetario = st.sidebar.number_input("Monto mínimo de exceso ($)", value=20000.0)
 porcentaje_pareto = st.sidebar.number_input("% Pareto", value=80)
 
 uploaded_file = st.file_uploader("Sube tu archivo (.xlsm)", type=["xlsm"])
@@ -90,17 +92,46 @@ if uploaded_file is not None:
     #Solo para efectos de diagnóstico
     #df_finiquito_auditoria[['Partida_Principal', 'Subpartida', 'Clave', 'Concepto', 'Monto_Contratado','Monto_Ejecutado']]
     
-    #----------------------7. Calculamos la variación porcentual de cada concepto respecto de lo contratado----------------------------------------------
-    #Esto nos ayuda a ver cuales conceptos rebasaron más el importe contratado
-    porcentajeRespectoContrato = umbral_exceso/100 # Usamos la variable de configuración
-    df_finiquito_auditoria['Variacion_Pct'] = (df_finiquito_auditoria['Monto_Ejecutado'] - df_finiquito_auditoria['Monto_Contratado']) / df_finiquito_auditoria['Monto_Contratado']
-    # Create a new column for the formatted percentage for display purposes
-    df_finiquito_auditoria['Variacion_Pct_%'] = df_finiquito_auditoria['Variacion_Pct'].apply(lambda x: f'{x:.2%}')
-    # Filtramos los que superan el porcentaje señalado (using the numeric Variacion_Pct)
-    excesos = df_finiquito_auditoria[df_finiquito_auditoria['Variacion_Pct'] > porcentajeRespectoContrato]
+    #----------------------7. Calculamos la variación porcentual e impacto económico-------------------------
+    porcentajeRespectoContrato = umbral_exceso / 100
     
-    st.write(f"Se encontraron {len(excesos)} conceptos con un porcentaje de {porcentajeRespectoContrato*100}% superior respecto del porcentaje contratado")
-    display(excesos[['Clave', 'Partida_Principal', 'Subpartida', 'Concepto', 'Unidad', 'Monto_Contratado', 'Monto_Ejecutado', 'Variacion_Pct_%']])
+    # NUEVO: Limpiar símbolos de moneda/comas y forzar formato numérico
+    for col in ['Monto_Contratado', 'Monto_Ejecutado']:
+        if df_finiquito_auditoria[col].dtype == 'object':
+            df_finiquito_auditoria[col] = df_finiquito_auditoria[col].astype(str).str.replace(r'[\$,\s]', '', regex=True)
+        df_finiquito_auditoria[col] = pd.to_numeric(df_finiquito_auditoria[col], errors='coerce').fillna(0)
+    
+    # Para evitar división entre cero si algún monto contratado viene vacío o en cero
+    df_finiquito_auditoria['Monto_Contratado'] = df_finiquito_auditoria['Monto_Contratado'].replace(0, np.nan)
+    
+    # 1. Calcular variación porcentual y diferencia absoluta en pesos (Línea 99 actual)
+    df_finiquito_auditoria['Variacion_Pct'] = (df_finiquito_auditoria['Monto_Ejecutado'] - df_finiquito_auditoria['Monto_Contratado']) / df_finiquito_auditoria['Monto_Contratado']
+    df_finiquito_auditoria['Diferencia_Absoluta'] = df_finiquito_auditoria['Monto_Ejecutado'] - df_finiquito_auditoria['Monto_Contratado']
+    
+    # Revertir los NaN a 0 para que no causen problemas en la visualización posterior
+    df_finiquito_auditoria['Monto_Contratado'] = df_finiquito_auditoria['Monto_Contratado'].fillna(0)
+    df_finiquito_auditoria['Variacion_Pct'] = df_finiquito_auditoria['Variacion_Pct'].fillna(0)
+    
+    # 2. Formato para visualización
+    df_finiquito_auditoria['Variacion_Pct_%'] = df_finiquito_auditoria['Variacion_Pct'].apply(lambda x: f'{x:.2%}')
+    
+    # 3. FILTRO DOBLE: Supera el porcentaje Y supera el monto mínimo económico
+    excesos = df_finiquito_auditoria[
+        (df_finiquito_auditoria['Variacion_Pct'] > porcentajeRespectoContrato) & 
+        (df_finiquito_auditoria['Diferencia_Absoluta'] > umbral_monetario)
+    ]
+    
+    # 4. Ordenar de mayor a menor impacto económico
+    excesos = excesos.sort_values(by='Diferencia_Absoluta', ascending=False)
+    
+    st.write(f"Se encontraron {len(excesos)} conceptos atípicos (>{umbral_exceso}% y >${umbral_monetario:,.2f} de exceso)")
+    
+    # Mostrar la tabla incluyendo la Diferencia Absoluta para dar contexto
+    display(excesos[['Clave', 'Partida_Principal', 'Subpartida', 'Concepto', 'Unidad', 'Monto_Contratado', 'Monto_Ejecutado', 'Diferencia_Absoluta', 'Variacion_Pct_%']].style.format({
+        'Monto_Contratado': '${:,.2f}', 
+        'Monto_Ejecutado': '${:,.2f}',
+        'Diferencia_Absoluta': '${:,.2f}'
+    }).background_gradient(subset=['Diferencia_Absoluta'], cmap='Reds'))
     
     #---------------------- 8. RESUMEN EJECUTIVO (CORREGIDO) ---------------------------------------------------------------------------------------------
     resumen_ejecutivo = df_finiquito_auditoria.groupby(['Partida_Principal', 'Subpartida']).agg({
