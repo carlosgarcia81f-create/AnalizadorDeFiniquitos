@@ -95,9 +95,22 @@ if uploaded_file is not None:
     #----------------------7. Calculamos la variación porcentual e impacto económico-------------------------
     porcentajeRespectoContrato = umbral_exceso / 100
     
-    # 1. Calcular variación porcentual y diferencia absoluta en pesos
+    # NUEVO: Limpiar símbolos de moneda/comas y forzar formato numérico
+    for col in ['Monto_Contratado', 'Monto_Ejecutado']:
+        if df_finiquito_auditoria[col].dtype == 'object':
+            df_finiquito_auditoria[col] = df_finiquito_auditoria[col].astype(str).str.replace(r'[\$,\s]', '', regex=True)
+        df_finiquito_auditoria[col] = pd.to_numeric(df_finiquito_auditoria[col], errors='coerce').fillna(0)
+    
+    # Para evitar división entre cero si algún monto contratado viene vacío o en cero
+    df_finiquito_auditoria['Monto_Contratado'] = df_finiquito_auditoria['Monto_Contratado'].replace(0, np.nan)
+    
+    # 1. Calcular variación porcentual y diferencia absoluta en pesos (Línea 99 actual)
     df_finiquito_auditoria['Variacion_Pct'] = (df_finiquito_auditoria['Monto_Ejecutado'] - df_finiquito_auditoria['Monto_Contratado']) / df_finiquito_auditoria['Monto_Contratado']
     df_finiquito_auditoria['Diferencia_Absoluta'] = df_finiquito_auditoria['Monto_Ejecutado'] - df_finiquito_auditoria['Monto_Contratado']
+    
+    # Revertir los NaN a 0 para que no causen problemas en la visualización posterior
+    df_finiquito_auditoria['Monto_Contratado'] = df_finiquito_auditoria['Monto_Contratado'].fillna(0)
+    df_finiquito_auditoria['Variacion_Pct'] = df_finiquito_auditoria['Variacion_Pct'].fillna(0)
     
     # 2. Formato para visualización
     df_finiquito_auditoria['Variacion_Pct_%'] = df_finiquito_auditoria['Variacion_Pct'].apply(lambda x: f'{x:.2%}')
