@@ -297,7 +297,40 @@ if uploaded_file is not None:
         st.write(f"**{len(df_piezas)} conceptos** prioritarios para conteo físico o revisión de facturas.")
         st.success(f"💰 Representan **${monto_piezas:,.2f}** (El **{pct_piezas:.2f}%** del total de la obra)")
         display(formato_tabla_pareto(df_piezas))
-
+    ####------DEPURACIÓN FINAL PARA INSPECCIÓN FÍSICA (INTERACTIVA POR EL USUARIO)-----#####
+    st.write("---")
+    st.subheader("🛠️ Depuración Final para Inspección Física")
+    
+    # 1. Hacemos una copia de todos los conceptos de prioridad ALTA
+    df_prioritarios = df_plan_inspeccion_filtrado.copy()
+    
+    # 2. Agregamos la columna de control (True por defecto)
+    df_prioritarios['Inspeccion_Fisica'] = True
+    
+    # 3. Mostrar la tabla como un editor interactivo
+    st.write("Desmarca los conceptos cuyo cálculo dependa de otro (ej. rellenos, cimbras). Estos se conservarán etiquetados para revisión de gabinete:")
+    df_editado = st.data_editor(
+        df_prioritarios[['Inspeccion_Fisica', 'Clave', 'Concepto', 'Unidad', 'Categoria_Analisis', 'Monto_Ejecutado']],
+        column_config={
+            "Inspeccion_Fisica": st.column_config.CheckboxColumn(
+                "¿Inspección Física?",
+                help="Desmarca si el volumen se deduce de otro concepto y solo requiere cálculo en gabinete",
+                default=True,
+            )
+        },
+        disabled=["Clave", "Concepto", "Unidad", "Categoria_Analisis", "Monto_Ejecutado"], 
+        hide_index=True,
+        use_container_width=True
+    )
+    
+    # 4. Clasificar el tipo de revisión en el dataframe final que se va a descargar
+    df_final_descarga = df_prioritarios.copy()
+    # Actualizamos la columna con los cambios que hizo el usuario en pantalla
+    df_final_descarga['Inspeccion_Fisica'] = df_editado['Inspeccion_Fisica'] 
+    # Creamos la etiqueta clara para Excel
+    df_final_descarga['Estrategia_Revision'] = df_final_descarga['Inspeccion_Fisica'].apply(
+        lambda x: 'Campo (Medición Directa)' if x else 'Gabinete (Cálculo Dependiente)'
+    )
     #---------------------------------- M O D U L O 2 ----------------------------------------------------------#
     #-------------D E S C A R G A  D E  A R C H I V O  A  E X C E L---------------------------------------------#
     
